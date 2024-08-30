@@ -48,22 +48,23 @@ pip install -r requirements.txt
 from scrapeschema import FileExtractor, PDFParser
 import os
 from dotenv import load_dotenv
-  load_dotenv()  # Load environment variables from .env file
-  api_key = os.getenv("OPENAI_API_KEY")
 
-  # Path to your PDF file
-  pdf_path = "./test.pdf"
+load_dotenv()  # Load environment variables from .env file
+api_key = os.getenv("OPENAI_API_KEY")
 
-  # Create a PDFParser instance with the API key
-  pdf_parser = PDFParser(api_key)
+# Path to your PDF file
+pdf_path = "./test.pdf"
 
-  # Create a FileExtraxctor instance with the PDF parser
-  scraper = FileExtractor(pdf_path, pdf_parser)
+# Create a PDFParser instance with the API key
+pdf_parser = PDFParser(api_key)
 
-  # Extract entities from the PDF
-  entities = scraper.extract_entities()
+# Create a FileExtraxctor instance with the PDF parser
+scraper = FileExtractor(pdf_path, pdf_parser)
 
-  print(entities)
+# Extract entities from the PDF
+entities = scraper.extract_entities()
+
+print(entities)
 ```
 ## Output
 ```json
