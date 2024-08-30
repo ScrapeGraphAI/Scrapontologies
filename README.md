@@ -1,6 +1,7 @@
-# ScrapeSchema
+# ScrapeOntology
 
-ScrapeSchema is a Python-based tool designed to extract entities and their associated schema from PDF files. This tool is particularly useful for those who need to analyze and organize the structure of data embedded within PDFs, enabling efficient data extraction for further processing or analysis.
+ScrapeOntology is a Python-based libraey designed to extract entities and relationship from files. 
+The generate schemas can be used to infer from document to use for tables in a database or for generating knowledge graph.
 
 ## Features
 
@@ -32,17 +33,38 @@ To install Graphviz on Linux, use the following command:
 ```bash
 sudo apt install graphviz
 ```
-#### Usage
+#### Installation
 After installing the prerequisites and dependencies, you can start using ScrapeSchema to extract entities and their schema from PDFs.
 
 Here’s a basic example:
 ```bash
 git clone https://github.com/ScrapeGraphAI/ScrapeSchema
-cd ./ScrapeSchema
 pip install -r requirements.txt
-streamlit run main.py
 ```
 
+## Usage
+
+```python
+from scrapeschema import FileExtractor, PDFParser
+import os
+from dotenv import load_dotenv
+  load_dotenv()  # Load environment variables from .env file
+  api_key = os.getenv("OPENAI_API_KEY")
+
+  # Path to your PDF file
+  pdf_path = "./test.pdf"
+
+  # Create a PDFParser instance with the API key
+  pdf_parser = PDFParser(api_key)
+
+  # Create a FileExtraxctor instance with the PDF parser
+  scraper = FileExtractor(pdf_path, pdf_parser)
+
+  # Extract entities from the PDF
+  entities = scraper.extract_entities()
+
+  print(entities)
+```
 ## Output
 ```json
 {
@@ -166,6 +188,3 @@ streamlit run main.py
   }
 }
 ```
-<p align="center">
-  <img src="https://i.ibb.co/7RPpsjV/temp.png" alt="example">
-</p>
