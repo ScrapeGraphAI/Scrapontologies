@@ -62,7 +62,7 @@ pdf_parser = PDFParser(api_key)
 scraper = FileExtractor(pdf_path, pdf_parser)
 
 # Extract entities from the PDF
-entities = scraper.extract_entities()
+entities = scraper.generate_json_schema()
 
 print(entities)
 ```

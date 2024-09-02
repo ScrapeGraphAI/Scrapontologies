@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any, Optional
 from .base_parser import BaseParser
 from ..entities import Entity, Relation
 import base64
@@ -9,12 +9,31 @@ from pdf2image.exceptions import PDFInfoNotInstalledError, PDFPageCountError, PD
 import requests
 import json
 from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT
+from PIL import Image
 
-def encode_image(image_path):
+def encode_image(image_path: str) -> str:
+    """
+    Encodes an image to a base64 string.
+
+    Args:
+        image_path (str): The path to the image file.
+
+    Returns:
+        str: The base64 encoded string of the image.
+    """
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
-def load_pdf_as_images(pdf_path):
+def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
+    """
+    Converts a PDF file to a list of images, one per page.
+
+    Args:
+        pdf_path (str): The path to the PDF file.
+
+    Returns:
+        Optional[List[Image.Image]]: A list of images if successful, None otherwise.
+    """
     try:
         images = convert_from_path(pdf_path)
         return images
@@ -22,12 +41,30 @@ def load_pdf_as_images(pdf_path):
         print(f"Error converting PDF: {e}")
         return None
 
-def save_image_to_temp(image):
+def save_image_to_temp(image: Image.Image) -> str:
+    """
+    Saves an image to a temporary file.
+
+    Args:
+        image (Image.Image): The image to save.
+
+    Returns:
+        str: The path to the temporary file.
+    """
     with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as temp_file:
         image.save(temp_file.name, 'JPEG')
         return temp_file.name
 
-def process_pdf(pdf_path):
+def process_pdf(pdf_path: str) -> List[str] or None:
+    """
+    Processes a PDF file and converts each page to a base64 encoded image.
+
+    Args:
+        pdf_path (str): The path to the PDF file.
+
+    Returns:
+        List[str] or None: A list of base64 encoded images if successful, None otherwise.
+    """
     images = load_pdf_as_images(pdf_path)
     if not images:
         return None
@@ -43,15 +80,96 @@ def process_pdf(pdf_path):
     return base64_images
 
 class PDFParser(BaseParser):
+    """
+    A parser for extracting entities and relations from PDF files.
+    """
+
     def __init__(self, api_key: str):
+        """
+        Initializes the PDFParser with an API key.
+
+        Args:
+            api_key (str): The API key for authentication.
+        """
         self.api_key = api_key
         self.headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}"
         }
 
-    def extract_entities(self, file_path: str) -> dict:
+    def extract_entities(self, file_path: str) -> List[Entity]:
+        """
+        Extracts entities from a PDF file.
+
+        Args:
+            file_path (str): The path to the PDF file.
+
+        Returns:
+            List[Entity]: A list of extracted entities.
+        """
         entities = []
+        entities_json_schema = self.entities_json_schema(file_path)
+
+        def traverse_schema(schema: Dict[str, Any], parent_id: str = None):
+            if isinstance(schema, dict):
+                entity_id = parent_id if parent_id else schema.get('title', 'root')
+                entity_type = schema.get('type', 'object')
+                attributes = schema.get('properties', {})
+
+                if attributes:
+                    entity = Entity(id=entity_id, type=entity_type, attributes=attributes)
+                    entities.append(entity)
+
+                for key, value in attributes.items():
+                    traverse_schema(value, key)
+
+        traverse_schema(entities_json_schema)
+        return entities
+
+    def extract_relations(self, file_path: str) -> List[Relation]:
+        """
+        Extracts relations from a PDF file.
+
+        Args:
+            file_path (str): The path to the PDF file.
+
+        Returns:
+            List[Relation]: A list of extracted relations.
+        """
+        relations = []
+        # Implement relation extraction logic here
+        # This is a placeholder for the actual implementation
+        return relations
+
+    def plot_entities_schema(self, file_path: str) -> None:
+        """
+        Plots the entities schema from a PDF file.
+
+        Args:
+            file_path (str): The path to the PDF file.
+        """
+        entities = []
+        base64_images = process_pdf(file_path)
+
+        if base64_images:
+            page_answers = self._generate_digraph(base64_images)
+            digraph_code = self._merge_digraphs_for_plot(page_answers)
+
+            print("\nDigraph code for all pages:")
+            print(digraph_code[9:-3])
+            print("digraph_code_execution----------------------------------")
+            exec(digraph_code[9:-3])
+
+    def entities_json_schema(self, file_path: str) -> Dict[str, Any]:
+        """
+        Generates a JSON schema of entities from a PDF file.
+
+        Args:
+            file_path (str): The path to the PDF file.
+
+        Returns:
+            Dict[str, Any]: The JSON schema of entities.
+        """
         base64_images = process_pdf(file_path)
 
         if base64_images:
@@ -62,31 +180,19 @@ class PDFParser(BaseParser):
             print("\n PDF JSON Schema:")
             print(json_schema)
             # json schema is a valid json schema but its a string convert it to a python dict
-            json_schema = json.loads(json_schema)
-            return json_schema
+            entities_json_schema = json.loads(json_schema)
+            return entities_json_schema
 
-    def extract_relations(self, file_path: str) -> List[Relation]:
-        relations = []
-        # Implement relation extraction logic here
-        # This is a placeholder for the actual implementation
-        return relations
-    
+    def _generate_digraph(self, base64_images: List[str]) -> List[str]:
+        """
+        Generates digraph code from base64 encoded images.
 
+        Args:
+            base64_images (List[str]): A list of base64 encoded images.
 
-    def plot_entities_schema(self, file_path: str):
-        entities = []
-        base64_images = process_pdf(file_path)
-
-        if base64_images:
-            page_answers = self._generate_digraph(base64_images)
-            digraph_code = self._merge_digraphs_for_plot
-
-            print("\nDigraph code for all pages:")
-            print(digraph_code[9:-3])
-            print("digraph_code_execution----------------------------------")
-            exec(digraph_code[9:-3])
-
-    def _generate_digraph(self, base64_images):
+        Returns:
+            List[str]: A list of digraph codes for each page.
+        """
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
             payload = {
@@ -123,7 +229,16 @@ class PDFParser(BaseParser):
 
         return page_answers
 
-    def _merge_digraphs_for_plot(self, page_answers):
+    def _merge_digraphs_for_plot(self, page_answers: List[str]) -> str:
+        """
+        Merges partial digraphs into a single digraph for plotting.
+
+        Args:
+            page_answers (List[str]): A list of partial digraph codes.
+
+        Returns:
+            str: The merged digraph code.
+        """
         digraph_prompt = "Merge the partial digraphs that I provide to you merging together all the detected entities, \n\n" + "\n\n".join(page_answers) + \
             "\nYour answer digraph must be a tree and must contain only the code for a valid graphviz graph"
         digraph_payload = {
@@ -140,9 +255,17 @@ class PDFParser(BaseParser):
         digraph_response = requests.post("https://api.openai.com/v1/chat/completions", headers=self.headers, json=digraph_payload)
         digraph_code = digraph_response.json()['choices'][0]['message']['content']
         return digraph_code
-    
 
-    def _generate_json_schema(self, base64_images):
+    def _generate_json_schema(self, base64_images: List[str]) -> List[str]:
+        """
+        Generates JSON schema from base64 encoded images.
+
+        Args:
+            base64_images (List[str]): A list of base64 encoded images.
+
+        Returns:
+            List[str]: A list of JSON schema codes for each page.
+        """
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
             payload = {
@@ -166,12 +289,20 @@ class PDFParser(BaseParser):
 
         return page_answers
 
-    def _merge_json_schemas(self, page_answers):
+    def _merge_json_schemas(self, page_answers: List[str]) -> str:
+        """
+        Merges partial JSON schemas into a single JSON schema.
+
+        Args:
+            page_answers (List[str]): A list of partial JSON schema codes.
+
+        Returns:
+            str: The merged JSON schema code.
+        """
         digraph_prompt = "Generate a unique json schema starting from the following \
                           \n\n" + "\n\n".join(page_answers) + "\n\n \
                           Remember to provide only the json schema, without any comments before or after the json schema"
 
-        
         digraph_payload = {
             "model": "gpt-4o",
             "temperature": 0,
