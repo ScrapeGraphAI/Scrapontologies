@@ -59,10 +59,10 @@ pdf_path = "./test.pdf"
 pdf_parser = PDFParser(api_key)
 
 # Create a FileExtraxctor instance with the PDF parser
-scraper = FileExtractor(pdf_path, pdf_parser)
+pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
 # Extract entities from the PDF
-entities = scraper.generate_json_schema()
+entities = pdf_extractor.generate_json_schema()
 
 print(entities)
 ```
