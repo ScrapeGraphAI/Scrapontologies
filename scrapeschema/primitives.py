@@ -11,5 +11,6 @@ class Entity:
 class Relation:
     source: str
     target: str
-    type: str
-    attributes: Dict[str, Any]
+    name: str
+    type: str = None
+    attributes: Dict[str, Any] = None

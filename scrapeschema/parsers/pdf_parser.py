@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 from .base_parser import BaseParser
-from ..entities import Entity, Relation
+from ..primitives import Entity, Relation
 import base64
 import os
 import tempfile
@@ -84,18 +84,7 @@ class PDFParser(BaseParser):
     A parser for extracting entities and relations from PDF files.
     """
 
-    def __init__(self, api_key: str):
-        """
-        Initializes the PDFParser with an API key.
-
-        Args:
-            api_key (str): The API key for authentication.
-        """
-        self.api_key = api_key
-        self.headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
-        }
+    ### init in inherited class
 
     def extract_entities(self, file_path: str) -> List[Entity]:
         """
@@ -196,8 +185,8 @@ class PDFParser(BaseParser):
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
             payload = {
-                "model": "gpt-4o",
-                "temperature": 0,
+                "model": self.model,
+                "temperature": self.temperature,
                 "messages": [
                     {
                         "role": "system",
@@ -222,7 +211,7 @@ class PDFParser(BaseParser):
                 ],
             }
 
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=self.headers, json=payload)
+            response = requests.post(self.inference_base_url, headers=self.headers, json=payload)
             answer = response.json()['choices'][0]['message']['content']
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
@@ -282,7 +271,7 @@ class PDFParser(BaseParser):
                 ],
             }
 
-            response = requests.post("https://api.openai.com/v1/chat/completions", headers=self.headers, json=payload)
+            response = requests.post(self.inference_base_url, headers=self.headers, json=payload)
             answer = response.json()['choices'][0]['message']['content']
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
@@ -304,8 +293,8 @@ class PDFParser(BaseParser):
                           Remember to provide only the json schema, without any comments before or after the json schema"
 
         digraph_payload = {
-            "model": "gpt-4o",
-            "temperature": 0,
+            "model": self.model,
+            "temperature": self.temperature,
             "messages": [
                 {"role": "user", "content": digraph_prompt}
             ],
