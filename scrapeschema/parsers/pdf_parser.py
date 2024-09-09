@@ -8,8 +8,9 @@ from pdf2image import convert_from_path
 from pdf2image.exceptions import PDFInfoNotInstalledError, PDFPageCountError, PDFSyntaxError
 import requests
 import json
-from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT
+from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT
 from PIL import Image
+import inspect
 
 def encode_image(image_path: str) -> str:
     """
@@ -34,6 +35,9 @@ def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
     Returns:
         Optional[List[Image.Image]]: A list of images if successful, None otherwise.
     """
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+    
     try:
         images = convert_from_path(pdf_path)
         return images
@@ -65,6 +69,9 @@ def process_pdf(pdf_path: str) -> List[str] or None:
     Returns:
         List[str] or None: A list of base64 encoded images if successful, None otherwise.
     """
+    if not os.path.exists(pdf_path):
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+    
     images = load_pdf_as_images(pdf_path)
     if not images:
         return None
@@ -96,6 +103,9 @@ class PDFParser(BaseParser):
         Returns:
             List[Entity]: A list of extracted entities.
         """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
         entities = []
         entities_json_schema = self.entities_json_schema(file_path)
 
@@ -113,6 +123,7 @@ class PDFParser(BaseParser):
                     traverse_schema(value, key)
 
         traverse_schema(entities_json_schema)
+        self.entities = entities
         return entities
 
     def extract_relations(self, file_path: str) -> List[Relation]:
@@ -125,11 +136,46 @@ class PDFParser(BaseParser):
         Returns:
             List[Relation]: A list of extracted relations.
         """
-        relations = []
-        # Implement relation extraction logic here
-        # This is a placeholder for the actual implementation
-        return relations
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
+        if not self.entities or len(self.entities) == 0:
+            self.extract_entities(file_path)
 
+        relation_class_str = inspect.getsource(Relation)
+        relations_prompt = RELATIONS_PROMPT.format(entities=self.entities, relation_class=relation_class_str)
+        relations_payload = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "messages": [
+                {"role": "user", "content": relations_prompt}
+            ],
+        }
+
+
+
+        relations_response = requests.post(self.inference_base_url, headers=self.headers, json=relations_payload)
+        relations_answer_code = relations_response.json()['choices'][0]['message']['content']
+
+        # Create a new dictionary to store the local variables
+        local_vars = {}
+        
+        # Execute the code in the context of local_vars
+        try:
+            exec(relations_answer_code, globals(), local_vars)
+        except Exception as e:
+            print(f"Error executing relations code: {e}")
+            raise ValueError(f"The language model generated invalid code: {e}") from e
+        
+        # Extract the relations from local_vars
+        relations_answer = local_vars.get('relations', [])
+        
+        self.relations = relations_answer
+        print(f"Extracted relations: {relations_answer_code}")
+
+        return  self.relations
+  
+        
     def plot_entities_schema(self, file_path: str) -> None:
         """
         Plots the entities schema from a PDF file.
@@ -137,6 +183,9 @@ class PDFParser(BaseParser):
         Args:
             file_path (str): The path to the PDF file.
         """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
         entities = []
         base64_images = process_pdf(file_path)
 
@@ -159,6 +208,9 @@ class PDFParser(BaseParser):
         Returns:
             Dict[str, Any]: The JSON schema of entities.
         """
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
         base64_images = process_pdf(file_path)
 
         if base64_images:

@@ -16,23 +16,13 @@ def main():
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities from the PDF
-    entities = pdf_extractor.generate_json_schema()
+    entities = pdf_extractor.extract_entities()
 
     print(entities)
 
+    relations = pdf_extractor.extract_relations()
+    print(relations)
+    
 
-    TODO = """"    # Print the extracted entities
-    print("Extracted Entities:")
-    for entity in entities:
-        print(f"Entity: {entity}")
-
-    # Extract relations from the PDF
-    relations = scraper.extract_relations()
-
-    # Print the extracted relations
-    print("\nExtracted Relations:")
-    for relation in relations:
-        print(f"Relation: {relation}")
-"""
 if __name__ == "__main__":
     main()

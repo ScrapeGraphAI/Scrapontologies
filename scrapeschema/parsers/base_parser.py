@@ -19,6 +19,9 @@ class BaseParser(ABC):
         self.inference_base_url = inference_base_url
         self.model = model
         self.temperature = temperature
+        self.entities = []
+        self.relations = []
+
     @abstractmethod
     def extract_entities(self, file_path: str) -> List[Entity]:
         pass
@@ -49,4 +52,20 @@ class BaseParser(ABC):
     
     def set_inference_base_url(self, inference_base_url: str):
         self.inference_base_url = inference_base_url
+
+    def get_entities(self):
+        return self.entities
+    
+    def get_relations(self):
+        return self.relations
+    
+    def set_entities(self, entities: List[Entity]):
+        if not isinstance(entities, list) or not all(isinstance(entity, Entity) for entity in entities):
+            raise TypeError("entities must be a List of Entity objects")
+        self.entities = entities
+    
+    def set_relations(self, relations: List[Relation]):
+        if not isinstance(relations, list) or not all(isinstance(relation, Relation) for relation in relations):
+            raise TypeError("relations must be a List of Relation objects")
+        self.relations = relations
     

@@ -152,3 +152,14 @@ Extract the schema of the meaningful entities in this document, I want something
   ]
 }
 """
+
+RELATIONS_PROMPT = """
+Given these entitities in this format:
+{entities}
+Find meaningfull relations among this entities, give the relations with the following structure:
+{relation_class}
+Remember to give only and exclusively the Python code for generating the relations, nothing else.
+No intro, no code block, no nothing, just the code and remember to insert the following imports:
+from dataclasses import dataclass
+from typing import Any, Dict, List
+"""
