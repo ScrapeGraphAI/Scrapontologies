@@ -10,17 +10,17 @@ class BaseParser(ABC):
         Args:
             api_key (str): The API key for authentication.
         """
-        self.api_key = api_key
-        self.headers = {
+        self._api_key = api_key
+        self._headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
+            "Authorization": f"Bearer {self._api_key}"
         }
 
         self.inference_base_url = inference_base_url
         self.model = model
         self.temperature = temperature
-        self.entities = []
-        self.relations = []
+        self._entities = []
+        self._relations = []
 
     @abstractmethod
     def extract_entities(self, file_path: str) -> List[Entity]:
@@ -36,36 +36,36 @@ class BaseParser(ABC):
 
     
     def get_api_key(self):
-        return self.api_key
+        return self._api_key
     
     def get_headers(self):
-        return self.headers
+        return self._headers
     
     def get_inference_base_url(self):
         return self.inference_base_url
     
     def set_api_key(self, api_key: str):
-        self.api_key = api_key
+        self._api_key = api_key
     
     def set_headers(self, headers: Dict[str, str]):
-        self.headers = headers
+        self._headers = headers
     
     def set_inference_base_url(self, inference_base_url: str):
         self.inference_base_url = inference_base_url
 
     def get_entities(self):
-        return self.entities
+        return self._entities
     
     def get_relations(self):
-        return self.relations
+        return self._relations
     
     def set_entities(self, entities: List[Entity]):
         if not isinstance(entities, list) or not all(isinstance(entity, Entity) for entity in entities):
             raise TypeError("entities must be a List of Entity objects")
-        self.entities = entities
+        self._entities = entities
     
     def set_relations(self, relations: List[Relation]):
         if not isinstance(relations, list) or not all(isinstance(relation, Relation) for relation in relations):
             raise TypeError("relations must be a List of Relation objects")
-        self.relations = relations
+        self._relations = relations
     

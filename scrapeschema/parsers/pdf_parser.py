@@ -59,7 +59,7 @@ def save_image_to_temp(image: Image.Image) -> str:
         image.save(temp_file.name, 'JPEG')
         return temp_file.name
 
-def process_pdf(pdf_path: str) -> List[str] or None:
+def process_pdf(pdf_path: str) -> List[str] or None: # type: ignore
     """
     Processes a PDF file and converts each page to a base64 encoded image.
 
