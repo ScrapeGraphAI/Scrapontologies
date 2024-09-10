@@ -139,14 +139,14 @@ class PDFParser(BaseParser):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
-        if not self.entities or len(self.entities) == 0:
+        if not self._entities or len(self._entities) == 0:
             self.extract_entities(file_path)
 
         relation_class_str = inspect.getsource(Relation)
-        relations_prompt = RELATIONS_PROMPT.format(entities=self.entities, relation_class=relation_class_str)
+        relations_prompt = RELATIONS_PROMPT.format(entities=self._entities, relation_class=relation_class_str)
         relations_payload = {
-            "model": self.model,
-            "temperature": self.temperature,
+            "model": self._model,
+            "temperature": self._temperature,
             "messages": [
                 {"role": "user", "content": relations_prompt}
             ],
@@ -154,7 +154,7 @@ class PDFParser(BaseParser):
 
 
 
-        relations_response = requests.post(self.inference_base_url, headers=self.headers, json=relations_payload)
+        relations_response = requests.post(self._inference_base_url, headers=self._headers, json=relations_payload)
         relations_answer_code = relations_response.json()['choices'][0]['message']['content']
 
         # Create a new dictionary to store the local variables
@@ -170,10 +170,10 @@ class PDFParser(BaseParser):
         # Extract the relations from local_vars
         relations_answer = local_vars.get('relations', [])
         
-        self.relations = relations_answer
+        self._relations = relations_answer
         print(f"Extracted relations: {relations_answer_code}")
 
-        return  self.relations
+        return  self._relations
   
         
     def plot_entities_schema(self, file_path: str) -> None:
@@ -237,8 +237,8 @@ class PDFParser(BaseParser):
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
             payload = {
-                "model": self.model,
-                "temperature": self.temperature,
+                "model": self._model,
+                "temperature": self._temperature,
                 "messages": [
                     {
                         "role": "system",
@@ -263,7 +263,7 @@ class PDFParser(BaseParser):
                 ],
             }
 
-            response = requests.post(self.inference_base_url, headers=self.headers, json=payload)
+            response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
             answer = response.json()['choices'][0]['message']['content']
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
