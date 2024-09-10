@@ -169,7 +169,7 @@ Based on the following description, determine if the user wants to delete an ent
 and provide the ID of the item to be deleted. If it's not clear, ask for clarification.
 
 Current entities: {entities}
-Current relations: 
+Current relations: {relations}
 
 User description: {item_description}
 

@@ -9,6 +9,7 @@ class Entity:
 
 @dataclass
 class Relation:
+    id: str
     source: str
     target: str
     name: str
