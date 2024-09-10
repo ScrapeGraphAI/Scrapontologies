@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from ..primitives import Entity, Relation
 
 class BaseParser(ABC):
-    def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions", model: str = "gpt-4o", temperature: float = 0.0):
+    def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions", model: str = "gpt-4o-2024-08-06", temperature: float = 0.0):
         """
         Initializes the PDFParser with an API key.
 
@@ -16,9 +16,9 @@ class BaseParser(ABC):
             "Authorization": f"Bearer {self._api_key}"
         }
 
-        self.inference_base_url = inference_base_url
-        self.model = model
-        self.temperature = temperature
+        self._inference_base_url = inference_base_url
+        self._model = model
+        self._temperature = temperature
         self._entities = []
         self._relations = []
 
@@ -34,15 +34,20 @@ class BaseParser(ABC):
     def entities_json_schema(self, file_path: str) -> Dict[str, Any]:
         pass
 
-    
     def get_api_key(self):
         return self._api_key
     
     def get_headers(self):
         return self._headers
     
+    def get_model(self):
+        return self._model
+    
+    def get_temperature(self):
+        return self._temperature
+    
     def get_inference_base_url(self):
-        return self.inference_base_url
+        return self._inference_base_url
     
     def set_api_key(self, api_key: str):
         self._api_key = api_key
@@ -68,4 +73,3 @@ class BaseParser(ABC):
         if not isinstance(relations, list) or not all(isinstance(relation, Relation) for relation in relations):
             raise TypeError("relations must be a List of Relation objects")
         self._relations = relations
-    

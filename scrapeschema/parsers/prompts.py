@@ -163,3 +163,20 @@ No intro, no code block, no nothing, just the code and remember to insert the fo
 from dataclasses import dataclass
 from typing import Any, Dict, List
 """
+
+DELETE_PROMPT = """
+Based on the following description, determine if the user wants to delete an entity or a relation,
+and provide the ID of the item to be deleted. If it's not clear, ask for clarification.
+
+Current entities: {entities}
+Current relations: 
+
+User description: {item_description}
+
+Respond with the following JSON structure:
+    Type: "[Entity/Relation]",
+    ID: "[ID of the item to delete, or 'None' if unclear]",
+    Clarification: "[Any necessary clarification question, or 'None' if clear]"
+
+Remember to provide only the JSON, nothing else before or after the JSON.
+"""

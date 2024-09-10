@@ -123,7 +123,7 @@ class PDFParser(BaseParser):
                     traverse_schema(value, key)
 
         traverse_schema(entities_json_schema)
-        self.entities = entities
+        self._entities = entities
         return entities
 
     def extract_relations(self, file_path: str) -> List[Relation]:
@@ -323,7 +323,7 @@ class PDFParser(BaseParser):
                 ],
             }
 
-            response = requests.post(self.inference_base_url, headers=self.headers, json=payload)
+            response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
             answer = response.json()['choices'][0]['message']['content']
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
@@ -345,14 +345,14 @@ class PDFParser(BaseParser):
                           Remember to provide only the json schema, without any comments before or after the json schema"
 
         digraph_payload = {
-            "model": self.model,
-            "temperature": self.temperature,
+            "model": self._model,
+            "temperature": self._temperature,
             "messages": [
                 {"role": "user", "content": digraph_prompt}
             ],
         }
 
-        digraph_response = requests.post("https://api.openai.com/v1/chat/completions", headers=self.headers, json=digraph_payload)
+        digraph_response = requests.post("https://api.openai.com/v1/chat/completions", headers=self._headers, json=digraph_payload)
         digraph_code = digraph_response.json()['choices'][0]['message']['content']
         return digraph_code
 
