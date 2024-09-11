@@ -7,7 +7,7 @@ The generate schemas can be used to infer from document to use for tables in a d
 
 - **Entity Extraction**: Automatically identifies and extracts entities from PDF files.
 - **Schema Generation**: Constructs a schema based and structure of the extracted entities.
-- **Visualization**: Leverages Graphviz to visualize the extracted schema.
+- **Visualization**: Dynamic schema visualization
 
 ## Quick Start
 
@@ -16,14 +16,15 @@ The generate schemas can be used to infer from document to use for tables in a d
 Before you begin, ensure you have the following installed on your system:
 
 - **Python**: Make sure Python 3.9+ is installed.
-- **Graphviz**: This tool is necessary for visualizing the extracted schema.
+- **Poppler**: This tool is necessary for converting PDF to images.
 
 #### MacOS Installation
 
-To install Graphviz on MacOS, use the following command:
+To install Poppler on MacOS, use the following command:
 
 ```bash
-brew install graphviz
+brew install poppler
+
 ```
 
 #### Linux Installation
@@ -31,8 +32,24 @@ brew install graphviz
 To install Graphviz on Linux, use the following command:
 
 ```bash
-sudo apt install graphviz
+sudo apt-get install poppler-utils
 ```
+
+#### Windows
+
+1. Download the latest Poppler release for Windows from [poppler releases](https://github.com/oschwartz10612/poppler-windows/releases/).
+2. Extract the downloaded zip file to a location on your computer (e.g., `C:\Program Files\poppler`).
+3. Add the `bin` directory of the extracted folder to your system's PATH environment variable.
+
+To add to PATH:
+1. Search for "Environment Variables" in the Start menu and open it.
+2. Under "System variables", find and select "Path", then click "Edit".
+3. Click "New" and add the path to the Poppler `bin` directory (e.g., `C:\Program Files\poppler\bin`).
+4. Click "OK" to save the changes.
+
+After installation, restart your terminal or command prompt for the changes to take effect.
+If doesn't work try the magic restart button.
+
 #### Installation
 After installing the prerequisites and dependencies, you can start using ScrapeSchema to extract entities and their schema from PDFs.
 

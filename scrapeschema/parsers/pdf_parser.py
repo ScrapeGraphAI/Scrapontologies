@@ -11,6 +11,11 @@ import json
 from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT
 from PIL import Image
 import inspect
+import subprocess
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def encode_image(image_path: str) -> str:
     """
@@ -25,9 +30,26 @@ def encode_image(image_path: str) -> str:
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
 
+def is_poppler_installed() -> bool:
+    """Check if pdftoppm is available in the system's PATH."""
+    try:
+        subprocess.run(['pdftoppm', '-v'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True
+    except FileNotFoundError:
+        return False
+
+def list_directory(path: str):
+    """List contents of a directory."""
+    try:
+        files = os.listdir(path)
+        for f in files:
+            logging.info(f"File in directory: {os.path.join(path, f)}")
+    except Exception as e:
+        logging.error(f"Error listing directory {path}: {e}")
+
 def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
     """
-    Converts a PDF file to a list of images, one per page.
+    Converts a PDF file to a list of images, one per page, using pdftoppm.
 
     Args:
         pdf_path (str): The path to the PDF file.
@@ -35,15 +57,51 @@ def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
     Returns:
         Optional[List[Image.Image]]: A list of images if successful, None otherwise.
     """
-    if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+    logging.info(f"Processing PDF: {pdf_path}")
     
-    try:
-        images = convert_from_path(pdf_path)
-        return images
-    except (PDFInfoNotInstalledError, PDFPageCountError, PDFSyntaxError) as e:
-        print(f"Error converting PDF: {e}")
-        return None
+    if not os.path.exists(pdf_path):
+        logging.error(f"PDF file not found: {pdf_path}")
+        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
+
+    if not is_poppler_installed():
+        logging.error("Poppler is not installed.")
+        raise EnvironmentError("Poppler is not installed. Please install it to use this functionality.")
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        output_prefix = os.path.join(temp_dir, 'pdf_page')
+        logging.info(f"Output prefix: {output_prefix}")
+
+        command = ['pdftoppm', pdf_path, output_prefix, '-png']
+        logging.info(f"Running command: {' '.join(command)}")
+
+        try:
+            subprocess.run(command, check=True, capture_output=True, text=True)
+            logging.info("PDF conversion completed successfully")
+
+            logging.info("Listing directory contents after conversion:")
+            list_directory(temp_dir)
+
+            images = []
+            page_num = 1
+            while True:
+                image_path = f"{output_prefix}-{page_num}.png"
+                if not os.path.exists(image_path):
+                    break
+                logging.info(f"Loading image: {image_path}")
+                images.append(Image.open(image_path))
+                page_num += 1
+
+            logging.info(f"Total pages processed: {page_num - 1}")
+            return images
+
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error converting PDF: {e}")
+            logging.error(f"Command output: {e.output}")
+            logging.error(f"Command error: {e.stderr}")
+            return None
+
+    # The temporary directory and its contents are automatically cleaned up
+    # when exiting the 'with' block
 
 def save_image_to_temp(image: Image.Image) -> str:
     """
