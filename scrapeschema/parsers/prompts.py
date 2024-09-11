@@ -180,3 +180,23 @@ Respond with the following JSON structure:
 
 Remember to provide only the JSON, nothing else before or after the JSON.
 """
+
+UPDATE_ENTITIES_PROMPT = """
+You are tasked with updating a list of entities. You need to integrate new entities with existing ones, 
+avoiding duplicates and reconciling any conflicts. Here are the rules:
+
+1. If a new entity has the same ID as an existing entity, update the existing entity with any new or changed attributes.
+2. Add any completely new entities that don't match with existing ones.
+3. Try to maintain the base structure you have for the existing entities, adding new entities or updating existing entities
+4. If exist entities is empty, copy the new entity into the existing entity as they are.
+
+
+Existing entities:
+{existing_entities}
+
+New entities to integrate:
+{new_entities}
+
+Please provide the updated list of entities as a JSON array. Each entity should be a JSON object with 'id', 'type', and 'attributes' fields.
+provide only the JSON, nothing else, nothing before or after the JSON.
+"""

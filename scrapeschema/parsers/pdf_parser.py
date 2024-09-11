@@ -8,7 +8,7 @@ from pdf2image import convert_from_path
 from pdf2image.exceptions import PDFInfoNotInstalledError, PDFPageCountError, PDFSyntaxError
 import requests
 import json
-from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT
+from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT
 from PIL import Image
 import inspect
 
@@ -94,18 +94,13 @@ class PDFParser(BaseParser):
     ### init in inherited class
 
     def extract_entities(self, file_path: str) -> List[Entity]:
-        """
-        Extracts entities from a PDF file.
-
-        Args:
-            file_path (str): The path to the PDF file.
-
-        Returns:
-            List[Entity]: A list of extracted entities.
-        """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
+        new_entities = self._extract_entities_from_pdf(file_path)
+        return self.update_entities(new_entities)
+
+    def _extract_entities_from_pdf(self, file_path: str) -> List[Entity]:
         entities = []
         entities_json_schema = self.entities_json_schema(file_path)
 
@@ -123,8 +118,33 @@ class PDFParser(BaseParser):
                     traverse_schema(value, key)
 
         traverse_schema(entities_json_schema)
-        self._entities = entities
         return entities
+
+    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
+        existing_entities = self._entities
+
+        # Prepare the prompt for the LLM
+        prompt = UPDATE_ENTITIES_PROMPT.format(
+            existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
+            new_entities=json.dumps([e.__dict__ for e in new_entities], indent=2)
+        )
+
+        # Use _get_llm_response instead of direct API call
+        response = self._get_llm_response(prompt)
+        response = response[8:-3]  # Remove ```json and ``` if present
+        
+        try:
+            updated_entities_data = json.loads(response)
+            updated_entities = [Entity(**entity_data) for entity_data in updated_entities_data]
+            
+            # Update the parser's entities
+            self._entities = updated_entities
+            
+            print(f"Entities updated. New count: {len(updated_entities)}")
+            return updated_entities
+        except json.JSONDecodeError:
+            print("Error: Unable to parse the LLM response.")
+            return existing_entities
 
     def extract_relations(self, file_path: str) -> List[Relation]:
         """
@@ -144,18 +164,9 @@ class PDFParser(BaseParser):
 
         relation_class_str = inspect.getsource(Relation)
         relations_prompt = RELATIONS_PROMPT.format(entities=self._entities, relation_class=relation_class_str)
-        relations_payload = {
-            "model": self._model,
-            "temperature": self._temperature,
-            "messages": [
-                {"role": "user", "content": relations_prompt}
-            ],
-        }
-
-
-
-        relations_response = requests.post(self._inference_base_url, headers=self._headers, json=relations_payload)
-        relations_answer_code = relations_response.json()['choices'][0]['message']['content']
+        
+        # Use _get_llm_response instead of direct API call
+        relations_answer_code = self._get_llm_response(relations_prompt)
 
         # Create a new dictionary to store the local variables
         local_vars = {}
@@ -225,134 +236,70 @@ class PDFParser(BaseParser):
             return entities_json_schema
 
     def _generate_digraph(self, base64_images: List[str]) -> List[str]:
-        """
-        Generates digraph code from base64 encoded images.
-
-        Args:
-            base64_images (List[str]): A list of base64 encoded images.
-
-        Returns:
-            List[str]: A list of digraph codes for each page.
-        """
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
-            payload = {
-                "model": self._model,
-                "temperature": self._temperature,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": f"You are an AI specialized in creating python code for generating digraph graphviz, you have to create python code for creating a digraph with the relative entities with the relative attributes \
-                                   (name_attribute : type) (i.e type is int,float,list[dict],dict,string,etc...) from a PDF screenshot.\
-                                    in the digraph you have to represent the entities with their attributes names and types, \
-                                    NOT THE VALUES OF THE ATTRIBUTES, IT'S EXTREMELY IMPORTANT. \
-                                    you must provide only the code to generate the digraph, without any comments before or after the code.\
-                                    Remember you don't have to insert the values of the attribute but only (name)\
-                                    Remember the generated digraph must be a tree, following the hierarchy of the entities in the PDF\
-                                    Remember to the deduplicate similar entities and to the remove the duplicate edges, you have to provide the best digraph\
-                                    that represent the PDF document because the partial digraphs are generated from the same document but from different parts of the PDF\
-                                    Remeber to follow a structure like this one: \n\n{DIGRAPH_EXAMPLE_PROMPT}"
-                    },
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": f"Here a page to from a PDF screenshot (Page {page_num})"},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                        ]
-                    }
-                ],
-            }
+            prompt = f"You are an AI specialized in creating python code for generating digraph graphviz, you have to create python code for creating a digraph with the relative entities with the relative attributes \
+                       (name_attribute : type) (i.e type is int,float,list[dict],dict,string,etc...) from a PDF screenshot.\
+                        in the digraph you have to represent the entities with their attributes names and types, \
+                        NOT THE VALUES OF THE ATTRIBUTES, IT'S EXTREMELY IMPORTANT. \
+                        you must provide only the code to generate the digraph, without any comments before or after the code.\
+                        Remember you don't have to insert the values of the attribute but only (name)\
+                        Remember the generated digraph must be a tree, following the hierarchy of the entities in the PDF\
+                        Remember to the deduplicate similar entities and to the remove the duplicate edges, you have to provide the best digraph\
+                        that represent the PDF document because the partial digraphs are generated from the same document but from different parts of the PDF\
+                        Remeber to follow a structure like this one: \n\n{DIGRAPH_EXAMPLE_PROMPT}\n\nHere a page to from a PDF screenshot (Page {page_num})"
 
-            response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
-            answer = response.json()['choices'][0]['message']['content']
+            # Use _get_llm_response with image
+            answer = self._get_llm_response(prompt, image_url=f"data:image/jpeg;base64,{base64_image}")
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
 
         return page_answers
 
     def _merge_digraphs_for_plot(self, page_answers: List[str]) -> str:
-        """
-        Merges partial digraphs into a single digraph for plotting.
-
-        Args:
-            page_answers (List[str]): A list of partial digraph codes.
-
-        Returns:
-            str: The merged digraph code.
-        """
         digraph_prompt = "Merge the partial digraphs that I provide to you merging together all the detected entities, \n\n" + "\n\n".join(page_answers) + \
             "\nYour answer digraph must be a tree and must contain only the code for a valid graphviz graph"
-        digraph_payload = {
-            "model": "gpt-4o",
-            "temperature": 0,
-            "messages": [
-                {"role": "system", "content": "You are an AI that generates only valid digraph code without any comments \
-                 before or after the generated code. At the end, it always shows the generated viz with \
-                 dot.render('ontology_graph', format='png'). You have to provide a graph that takes as reference the following graph: {DIGRAPH_EXAMPLE_PROMPT}"},
-                {"role": "user", "content": digraph_prompt}
-            ],
-        }
-
-        digraph_response = requests.post("https://api.openai.com/v1/chat/completions", headers=self.headers, json=digraph_payload)
-        digraph_code = digraph_response.json()['choices'][0]['message']['content']
+        
+        # Use _get_llm_response instead of direct API call
+        digraph_code = self._get_llm_response(digraph_prompt)
         return digraph_code
 
     def _generate_json_schema(self, base64_images: List[str]) -> List[str]:
-        """
-        Generates JSON schema from base64 encoded images.
-
-        Args:
-            base64_images (List[str]): A list of base64 encoded images.
-
-        Returns:
-            List[str]: A list of JSON schema codes for each page.
-        """
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
-            payload = {
-                "model": "gpt-4o",
-                "temperature": 0,
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": f"{JSON_SCHEMA_PROMPT} (Page {page_num})"},
-                            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
-                        ]
-                    }
-                ],
-            }
-
-            response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
-            answer = response.json()['choices'][0]['message']['content']
+            prompt = f"{JSON_SCHEMA_PROMPT} (Page {page_num})"
+            
+            # Use _get_llm_response with image
+            answer = self._get_llm_response(prompt, image_url=f"data:image/jpeg;base64,{base64_image}")
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
 
         return page_answers
 
     def _merge_json_schemas(self, page_answers: List[str]) -> str:
-        """
-        Merges partial JSON schemas into a single JSON schema.
-
-        Args:
-            page_answers (List[str]): A list of partial JSON schema codes.
-
-        Returns:
-            str: The merged JSON schema code.
-        """
         digraph_prompt = "Generate a unique json schema starting from the following \
                           \n\n" + "\n\n".join(page_answers) + "\n\n \
                           Remember to provide only the json schema, without any comments before or after the json schema"
 
-        digraph_payload = {
+        # Use _get_llm_response instead of direct API call
+        digraph_code = self._get_llm_response(digraph_prompt)
+        return digraph_code
+
+    def _get_llm_response(self, prompt: str, image_url: str = None) -> str:
+        """Get a response from the language model."""
+        messages = [{"role": "user", "content": prompt}]
+        
+        if image_url:
+            messages[0]["content"] = [
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": image_url}}
+            ]
+
+        payload = {
             "model": self._model,
             "temperature": self._temperature,
-            "messages": [
-                {"role": "user", "content": digraph_prompt}
-            ],
+            "messages": messages,
         }
-
-        digraph_response = requests.post("https://api.openai.com/v1/chat/completions", headers=self._headers, json=digraph_payload)
-        digraph_code = digraph_response.json()['choices'][0]['message']['content']
-        return digraph_code
+        response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
+        return response.json()['choices'][0]['message']['content']
 
