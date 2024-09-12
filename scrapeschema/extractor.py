@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any
 from .primitives import Entity, Relation
 from .parsers.base_parser import BaseParser
-from .parsers.prompts import DELETE_PROMPT
+from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT
 import requests
 import json
 
@@ -19,13 +19,18 @@ class Extractor(ABC):
     def entities_json_schema(self) -> Dict[str, Any]:
         pass
 
+    @abstractmethod
+    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
+        pass
+
 class FileExtractor(Extractor):
     def __init__(self, file_path: str, parser: BaseParser):
         self.file_path = file_path
         self.parser = parser
 
     def extract_entities(self) -> List[Entity]:
-        return self.parser.extract_entities(self.file_path)
+        new_entities = self.parser.extract_entities(self.file_path)
+        return self.update_entities(new_entities)
 
     def extract_relations(self) -> List[Relation]:
         return self.parser.extract_relations(self.file_path)
@@ -91,3 +96,34 @@ class FileExtractor(Extractor):
         }
         response = requests.post(self.parser.get_inference_base_url(), headers=self.parser.get_headers(), json=payload)
         return response.json()['choices'][0]['message']['content']
+
+    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
+        """
+        Update the existing entities with new entities, integrating and deduplicating as necessary.
+        
+        :param new_entities: List of new entities to be integrated
+        :return: Updated list of entities
+        """
+        existing_entities = self.parser.get_entities()
+        
+        # Prepare the prompt for the LLM
+        prompt = UPDATE_ENTITIES_PROMPT.format(
+            existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
+            new_entities=json.dumps([e.__dict__ for e in new_entities], indent=2)
+        )
+
+        # Get the LLM response
+        response = self._get_llm_response(prompt)
+        
+        try:
+            updated_entities_data = json.loads(response)
+            updated_entities = [Entity(**entity_data) for entity_data in updated_entities_data]
+            
+            # Update the parser's entities
+            self.parser.set_entities(updated_entities)
+            
+            print(f"Entities updated. New count: {len(updated_entities)}")
+            return updated_entities
+        except json.JSONDecodeError:
+            print("Error: Unable to parse the LLM response.")
+            return existing_entities
