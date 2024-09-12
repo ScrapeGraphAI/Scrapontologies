@@ -163,3 +163,40 @@ No intro, no code block, no nothing, just the code and remember to insert the fo
 from dataclasses import dataclass
 from typing import Any, Dict, List
 """
+
+DELETE_PROMPT = """
+Based on the following description, determine if the user wants to delete an entity or a relation,
+and provide the ID of the item to be deleted. If it's not clear, ask for clarification.
+
+Current entities: {entities}
+Current relations: {relations}
+
+User description: {item_description}
+
+Respond with the following JSON structure:
+    Type: "[Entity/Relation]",
+    ID: "[ID of the item to delete, or 'None' if unclear]",
+    Clarification: "[Any necessary clarification question, or 'None' if clear]"
+
+Remember to provide only the JSON, nothing else before or after the JSON.
+"""
+
+UPDATE_ENTITIES_PROMPT = """
+You are tasked with updating a list of entities. You need to integrate new entities with existing ones, 
+avoiding duplicates and reconciling any conflicts. Here are the rules:
+
+1. If a new entity has the same ID as an existing entity, update the existing entity with any new or changed attributes.
+2. Add any completely new entities that don't match with existing ones.
+3. Try to maintain the base structure you have for the existing entities, adding new entities or updating existing entities
+4. If exist entities is empty, copy the new entity into the existing entity as they are.
+
+
+Existing entities:
+{existing_entities}
+
+New entities to integrate:
+{new_entities}
+
+Please provide the updated list of entities as a JSON array. Each entity should be a JSON object with 'id', 'type', and 'attributes' fields.
+provide only the JSON, nothing else, nothing before or after the JSON.
+"""
