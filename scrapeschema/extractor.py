@@ -43,11 +43,6 @@ class FileExtractor(Extractor):
         return self.parser.entities_json_schema(self.file_path)
 
     def delete_entity_or_relation(self, item_description: str) -> None:
-        """
-        Delete an entity or relation based on user description.
-        
-        :param item_description: User's description of the entity or relation to delete
-        """
         entities_ids = [e.id for e in self.parser.get_entities()]
         relations_ids = [(r.source, r.target, r.name) for r in self.parser.get_relations()]
         prompt = DELETE_PROMPT.format(
@@ -56,16 +51,19 @@ class FileExtractor(Extractor):
             item_description=item_description
         )
 
-        response = self._get_llm_response(prompt)[8:-3]
+        response = self.parser.llm_client.get_response(prompt)
+        response = response.strip().strip('```json').strip('```')
         response_dict = json.loads(response)
 
-        for key, value in response_dict.items():
-            if key == 'Type':
-                if value == 'Entity':
-                    self._delete_entity(response_dict['ID'])
-                elif value == 'Relation':
-                    self._delete_relation(response_dict['ID'])
+        item_type = response_dict.get('Type')
+        item_id = response_dict.get('ID')
 
+        if item_type == 'Entity':
+            self._delete_entity(item_id)
+        elif item_type == 'Relation':
+            self._delete_relation(item_id)
+        else:
+            logger.error("Invalid type returned from LLM.")
 
     def _delete_entity(self, entity_id: str) -> None:
         """Delete an entity and its related relations."""
@@ -88,18 +86,6 @@ class FileExtractor(Extractor):
         
         self.parser.set_relations(relations)
         logger.info(f"Relation '{name}' between '{source}' and '{target}' has been deleted.")
-
-    def _get_llm_response(self, prompt: str) -> str:
-        """Get a response from the language model."""
-        payload = {
-            "model": self.parser.get_model(),
-            "temperature": self.parser.get_temperature(),
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-        }
-        response = requests.post(self.parser.get_inference_base_url(), headers=self.parser.get_headers(), json=payload)
-        return response.json()['choices'][0]['message']['content']
 
     def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
         """

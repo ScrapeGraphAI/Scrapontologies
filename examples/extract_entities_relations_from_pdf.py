@@ -1,5 +1,7 @@
 from scrapeschema import FileExtractor, PDFParser
 from scrapeschema.renderers import PyechartsRenderer
+from scrapeschema.llm_client import LLMClient
+
 import os
 from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
@@ -16,7 +18,8 @@ def main():
     pdf_path = os.path.join(curr_dirr, pdf_name)
 
     # Create a PDFParser instance with the API key
-    pdf_parser = PDFParser(api_key)
+    llm_client = LLMClient(api_key)
+    pdf_parser = PDFParser(llm_client)
 
     # Create a FileExtraxctor instance with the PDF parser
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)

@@ -12,6 +12,7 @@ import inspect
 import subprocess
 import logging
 import re
+from ..llm_client import LLMClient
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -160,7 +161,18 @@ class PDFParser(BaseParser):
     A parser for extracting entities and relations from PDF files.
     """
 
-    ### init in inherited class
+    def __init__(self, llm_client: LLMClient):
+        """
+        Initializes the PDFParser with an API key and LLM settings.
+
+        Args:
+            api_key (str): The API key for authentication.
+            inference_base_url (str): The base URL for the inference API.
+            model (str): The model to use for inference.
+            temperature (float): The temperature setting for the model.
+        """
+
+        super().__init__(llm_client)
 
     def extract_entities(self, file_path: str) -> List[Entity]:
         if not os.path.exists(file_path):
@@ -206,17 +218,14 @@ class PDFParser(BaseParser):
     def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
         existing_entities = self._entities
 
-        # Prepare the prompt for the LLM
         prompt = UPDATE_ENTITIES_PROMPT.format(
             existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
             new_entities=json.dumps([e.__dict__ for e in new_entities], indent=2)
         )
 
-        # Use _get_llm_response instead of direct API call
-        response = self._get_llm_response(prompt)
-        # parse the response which is inside ```json and ```, use regex to extract the json
-        response = self._extract_json_content(response)
-        
+        response = self.llm_client.get_response(prompt)
+        response = response.strip().strip('```json').strip('```')
+
         try:
             updated_entities_data = json.loads(response)
             updated_entities = [Entity(**entity_data) for entity_data in updated_entities_data]
@@ -224,10 +233,11 @@ class PDFParser(BaseParser):
             # Update the parser's entities
             self._entities = updated_entities
             
-            print(f"Entities updated. New count: {len(updated_entities)}")
+            logging.info(f"Entities updated. New count: {len(updated_entities)}")
             return updated_entities
-        except json.JSONDecodeError:
-            print("Error: Unable to parse the LLM response.")
+        except json.JSONDecodeError as e:
+            logging.error(f"JSONDecodeError: {e}")
+            logging.error("Error: Unable to parse the LLM response.")
             return existing_entities
 
     def extract_relations(self, file_path: str) -> List[Relation]:
@@ -247,10 +257,12 @@ class PDFParser(BaseParser):
             self.extract_entities(file_path)
 
         relation_class_str = inspect.getsource(Relation)
-        relations_prompt = RELATIONS_PROMPT.format(entities=self._entities, relation_class=relation_class_str)
+        relations_prompt = RELATIONS_PROMPT.format(
+            entities=json.dumps([e.__dict__ for e in self._entities], indent=2),
+            relation_class=relation_class_str
+        )
         
-        # Use _get_llm_response instead of direct API call
-        relations_answer_code = self._get_llm_response(relations_prompt)
+        relations_answer_code = self.llm_client.get_response(relations_prompt)
         relations_answer_code = self._extract_python_content(relations_answer_code)
 
         # Create a new dictionary to store the local variables
@@ -260,14 +272,14 @@ class PDFParser(BaseParser):
         try:
             exec(relations_answer_code, globals(), local_vars)
         except Exception as e:
-            print(f"Error executing relations code: {e}")
+            logging.error(f"Error executing relations code: {e}")
             raise ValueError(f"The language model generated invalid code: {e}") from e
         
         # Extract the relations from local_vars
         relations_answer = local_vars.get('relations', [])
         
         self._relations = relations_answer
-        print(f"Extracted relations: {relations_answer_code}")
+        logging.info(f"Extracted relations: {relations_answer_code}")
 
         return  self._relations
   
@@ -289,9 +301,9 @@ class PDFParser(BaseParser):
             page_answers = self._generate_digraph(base64_images)
             digraph_code = self._merge_digraphs_for_plot(page_answers)
 
-            print("\nDigraph code for all pages:")
-            print(digraph_code[9:-3])
-            print("digraph_code_execution----------------------------------")
+            logging.info("\nDigraph code for all pages:")
+            logging.info(digraph_code[9:-3])
+            logging.info("digraph_code_execution----------------------------------")
             exec(digraph_code[9:-3])
 
     def entities_json_schema(self, file_path: str) -> Dict[str, Any]:
@@ -314,8 +326,8 @@ class PDFParser(BaseParser):
             json_schema = self._merge_json_schemas(page_answers)
             json_schema = self._extract_json_content(json_schema)
 
-            print("\n PDF JSON Schema:")
-            print(json_schema)
+            logging.info("\n PDF JSON Schema:")
+            logging.info(json_schema)
             # json schema is a valid json schema but its a string convert it to a python dict
             entities_json_schema = json.loads(json_schema)
             return entities_json_schema
@@ -334,10 +346,10 @@ class PDFParser(BaseParser):
                         that represent the PDF document because the partial digraphs are generated from the same document but from different parts of the PDF\
                         Remeber to follow a structure like this one: \n\n{DIGRAPH_EXAMPLE_PROMPT}\n\nHere a page to from a PDF screenshot (Page {page_num})"
 
-            # Use _get_llm_response with image
-            answer = self._get_llm_response(prompt, image_url=f"data:image/jpeg;base64,{base64_image}")
+            image_data = f"data:image/jpeg;base64,{base64_image}"
+            answer = self.llm_client.get_response(prompt, image_url=image_data)
             page_answers.append(f"Page {page_num}: {answer}")
-            print(f"Processed page {page_num}")
+            logging.info(f"Processed page {page_num}")
 
         return page_answers
 
@@ -345,8 +357,7 @@ class PDFParser(BaseParser):
         digraph_prompt = "Merge the partial digraphs that I provide to you merging together all the detected entities, \n\n" + "\n\n".join(page_answers) + \
             "\nYour answer digraph must be a tree and must contain only the code for a valid graphviz graph"
         
-        # Use _get_llm_response instead of direct API call
-        digraph_code = self._get_llm_response(digraph_prompt)
+        digraph_code = self.llm_client.get_response(digraph_prompt)
         return digraph_code
 
     def _generate_json_schema(self, base64_images: List[str]) -> List[str]:
@@ -354,11 +365,16 @@ class PDFParser(BaseParser):
         for page_num, base64_image in enumerate(base64_images, start=1):
             prompt = f"{JSON_SCHEMA_PROMPT} (Page {page_num})"
             
-            # Use _get_llm_response with image
-            answer = self._get_llm_response(prompt, image_url=f"data:image/jpeg;base64,{base64_image}")
+            image_data = f"data:image/jpeg;base64,{base64_image}"
+            try:
+                answer = self.llm_client.get_response(prompt, image_url=image_data)
+            except ReadTimeout:
+                logging.warning("Request to OpenAI API timed out. Retrying...")
+                # Implement retry logic or skip to the next image
+                continue
             answer = self._extract_json_content(answer)
             page_answers.append(f"Page {page_num}: {answer}")
-            print(f"Processed page {page_num}")
+            logging.info(f"Processed page {page_num}")
 
         return page_answers
 
@@ -367,25 +383,6 @@ class PDFParser(BaseParser):
                           \n\n" + "\n\n".join(page_answers) + "\n\n \
                           Remember to provide only the json schema without any comments, wrapped in backticks (`) like ```json ... ``` and nothing else."
 
-        # Use _get_llm_response instead of direct API call
-        digraph_code = self._get_llm_response(digraph_prompt)
+        digraph_code = self.llm_client.get_response(digraph_prompt)
         return digraph_code
-
-    def _get_llm_response(self, prompt: str, image_url: str = None) -> str:
-        """Get a response from the language model."""
-        messages = [{"role": "user", "content": prompt}]
-        
-        if image_url:
-            messages[0]["content"] = [
-                {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
-            ]
-
-        payload = {
-            "model": self._model,
-            "temperature": self._temperature,
-            "messages": messages,
-        }
-        response = requests.post(self._inference_base_url, headers=self._headers, json=payload)
-        return response.json()['choices'][0]['message']['content']
 

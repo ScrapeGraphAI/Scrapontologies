@@ -1,24 +1,21 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any
 from ..primitives import Entity, Relation
+from ..llm_client import LLMClient
 
 class BaseParser(ABC):
-    def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions", model: str = "gpt-4o-2024-08-06", temperature: float = 0.0):
+    def __init__(self, llm_client: LLMClient):
         """
         Initializes the PDFParser with an API key.
 
         Args:
             api_key (str): The API key for authentication.
         """
-        self._api_key = api_key
+        self.llm_client = llm_client
         self._headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self._api_key}"
+            "Authorization": f"Bearer {self.llm_client.get_api_key()}"
         }
-
-        self._inference_base_url = inference_base_url
-        self._model = model
-        self._temperature = temperature
         self._entities = []
         self._relations = []
 

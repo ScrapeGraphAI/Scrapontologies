@@ -1,4 +1,5 @@
 from scrapeschema import FileExtractor, PDFParser
+from scrapeschema.llm_client import LLMClient
 import os
 from dotenv import load_dotenv
 
@@ -11,19 +12,18 @@ def main():
     pdf_name = "test.pdf"
     pdf_path = os.path.join(curr_dirr, pdf_name)
 
-    # Create a PDFParser instance with the API key
-    pdf_parser = PDFParser(
-        api_key=api_key,
-        model="gpt-4o-mini"
-    )
+    # Create a LLMClient instance with the API key
+    llm_client = LLMClient(api_key)
 
-    # Create a FileExtraxctor instance with the PDF parser
+    # Create a PDFParser instance with the LLMClient
+    pdf_parser = PDFParser(llm_client)
+
+    # Create a FileExtractor instance with the PDF parser
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
-    # Extract entities from the PDF
-    entities_json_schema  = pdf_extractor.entities_json_schema()
+    # Extract entities JSON schema from the PDF
+    entities_json_schema = pdf_extractor.entities_json_schema()
 
-    print(entities_json_schema)
 
 if __name__ == "__main__":
     main()
