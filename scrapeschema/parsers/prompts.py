@@ -38,7 +38,8 @@ DIGRAPH_EXAMPLE_PROMPT = """
 """
 
 JSON_SCHEMA_PROMPT = """
-Extract the schema of the meaningful entities in this document, I want something like:
+Extract the schema of the meaningful entities in this document, I want something like:\n
+```json
 { 
     "$schema": "http://json-schema.org/schema#",
     "title": "Payslip",
@@ -151,6 +152,7 @@ Extract the schema of the meaningful entities in this document, I want something
     "payslip"
   ]
 }
+```
 """
 
 RELATIONS_PROMPT = """
@@ -159,7 +161,8 @@ Given these entitities in this format:
 Find meaningfull relations among this entities, give the relations with the following structure:
 {relation_class}
 Remember to give only and exclusively the Python code for generating the relations, nothing else.
-No intro, no code block, no nothing, just the code and remember to insert the following imports:
+You must wrap the code in triple backticks (```) like ```python ... ``` and nothing else.
+You must insert the following imports in the code:\n
 from dataclasses import dataclass
 from typing import Any, Dict, List
 """
@@ -198,5 +201,5 @@ New entities to integrate:
 {new_entities}
 
 Please provide the updated list of entities as a JSON array. Each entity should be a JSON object with 'id', 'type', and 'attributes' fields.
-provide only the JSON, nothing else, nothing before or after the JSON.
+Provide only the JSON array, wrapped in backticks (`) like ```json ... ``` and nothing else.
 """
