@@ -6,6 +6,8 @@
 #   features: []
 #   all-features: false
 #   with-sources: false
+#   generate-hashes: false
+#   universal: false
 
 -e file:.
 alabaster==0.7.16
@@ -22,10 +24,6 @@ certifi==2024.7.4
 charset-normalizer==3.3.2
     # via requests
     # via scrapeschema
-colorama==0.4.6
-    # via pylint
-    # via pytest
-    # via sphinx
 dill==0.3.8
     # via pylint
 docutils==0.19

@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Awesome-pyecharts</title>
+                <script type="text/javascript" src="https://assets.pyecharts.org/assets/v5/echarts.min.js"></script>
+
+
+        <style>
+            body, html {
+                height: 100%;
+                margin: 0;
+            }
+
+            .chart-container {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+            }
+
+            canvas {
+                width: 100% !important;
+                height: 100% !important;
+            }
+        </style>
+        </head>
+<body >
+    <div id="b8096c131051489eb70295abd4d8084d" class="chart-container" style="width:100%; height:100%; "></div>
+    <script>
+        var chart_b8096c131051489eb70295abd4d8084d = echarts.init(
+            document.getElementById('b8096c131051489eb70295abd4d8084d'), 'white', {renderer: 'canvas'});
+        var option_b8096c131051489eb70295abd4d8084d = {
+    "animation": true,
+    "animationThreshold": 2000,
+    "animationDuration": 1000,
+    "animationEasing": "cubicOut",
+    "animationDelay": 0,
+    "animationDurationUpdate": 300,
+    "animationEasingUpdate": "cubicOut",
+    "animationDelayUpdate": 0,
+    "aria": {
+        "enabled": false
+    },
+    "color": [
+        "#5470c6",
+        "#91cc75",
+        "#fac858",
+        "#ee6666",
+        "#73c0de",
+        "#3ba272",
+        "#fc8452",
+        "#9a60b4",
+        "#ea7ccc"
+    ],
+    "series": [
+        {
+            "type": "graph",
+            "layout": "force",
+            "symbolSize": 10,
+            "circular": {
+                "rotateLabel": false
+            },
+            "force": {
+                "repulsion": 2000,
+                "gravity": 0.2,
+                "edgeLength": 30,
+                "friction": 0.6,
+                "layoutAnimation": true
+            },
+            "label": {
+                "show": true,
+                "margin": 8
+            },
+            "lineStyle": {
+                "show": true,
+                "width": 1,
+                "opacity": 0.7,
+                "curveness": 0.2,
+                "type": "solid"
+            },
+            "roam": true,
+            "draggable": true,
+            "focusNodeAdjacency": true,
+            "data": [
+                {
+                    "name": "Comprehensive Fund Document",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "Comprehensive Fund Document"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"fundFacts\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"fund\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"name\": {\n            \"type\": \"string\"\n          },\n          \"date\": {\n            \"type\": \"string\",\n            \"format\": \"date\"\n          },\n          \"fundCode\": {\n            \"type\": \"string\"\n          },\n          \"dateSeriesStarted\": {\n            \"type\": \"string\",\n            \"format\": \"date\"\n          },\n          \"totalValue\": {\n            \"type\": \"string\"\n          },\n          \"managementExpenseRatio\": {\n            \"type\": \"string\"\n          },\n          \"fundManager\": {\n            \"type\": \"string\"\n          },\n          \"portfolioManager\": {\n            \"type\": \"string\"\n          },\n          \"subAdvisor\": {\n            \"type\": \"string\"\n          },\n          \"minimumInvestment\": {\n            \"type\": \"string\"\n          },\n          \"topInvestments\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"name\": {\n                  \"type\": \"string\"\n                },\n                \"percentage\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"required\": [\n                \"name\",\n                \"percentage\"\n              ]\n            }\n          },\n          \"totalNumberOfInvestments\": {\n            \"type\": \"integer\"\n          },\n          \"investmentMix\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"object\",\n              \"properties\": {\n                \"category\": {\n                  \"type\": \"string\"\n                },\n                \"percentage\": {\n                  \"type\": \"string\"\n                }\n              },\n              \"required\": [\n                \"category\",\n                \"percentage\"\n              ]\n            }\n          },\n          \"riskRating\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"name\",\n          \"date\",\n          \"fundCode\",\n          \"dateSeriesStarted\",\n          \"totalValue\",\n          \"managementExpenseRatio\",\n          \"fundManager\",\n          \"portfolioManager\",\n          \"subAdvisor\",\n          \"minimumInvestment\",\n          \"topInvestments\",\n          \"totalNumberOfInvestments\",\n          \"investmentMix\",\n          \"riskRating\"\n        ]\n      }\n    },\n    \"required\": [\n      \"fund\"\n    ]\n  },\n  \"investmentFundDocument\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"yearByYearReturns\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"year\": {\n              \"type\": \"integer\"\n            },\n            \"returnPercentage\": {\n              \"type\": \"number\"\n            }\n          },\n          \"required\": [\n            \"year\",\n            \"returnPercentage\"\n          ]\n        }\n      },\n      \"bestWorst3MonthReturns\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"bestReturn\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"percentage\": {\n                \"type\": \"number\"\n              },\n              \"date\": {\n                \"type\": \"string\",\n                \"format\": \"date\"\n              },\n              \"investmentValue\": {\n                \"type\": \"string\"\n              }\n            },\n            \"required\": [\n              \"percentage\",\n              \"date\",\n              \"investmentValue\"\n            ]\n          },\n          \"worstReturn\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"percentage\": {\n                \"type\": \"number\"\n              },\n              \"date\": {\n                \"type\": \"string\",\n                \"format\": \"date\"\n              },\n              \"investmentValue\": {\n                \"type\": \"string\"\n              }\n            },\n            \"required\": [\n              \"percentage\",\n              \"date\",\n              \"investmentValue\"\n            ]\n          }\n        },\n        \"required\": [\n          \"bestReturn\",\n          \"worstReturn\"\n        ]\n      },\n      \"averageReturn\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"initialInvestment\": {\n            \"type\": \"number\"\n          },\n          \"finalValue\": {\n            \"type\": \"number\"\n          },\n          \"annualCompoundReturn\": {\n            \"type\": \"number\"\n          }\n        },\n        \"required\": [\n          \"initialInvestment\",\n          \"finalValue\",\n          \"annualCompoundReturn\"\n        ]\n      },\n      \"investorInfo\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"targetInvestors\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"investmentGoals\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          }\n        },\n        \"required\": [\n          \"targetInvestors\",\n          \"investmentGoals\"\n        ]\n      },\n      \"taxInformation\": {\n        \"type\": \"string\"\n      },\n      \"costs\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"salesCharges\": {\n            \"type\": \"string\"\n          },\n          \"fundExpenses\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"managementExpenseRatio\": {\n                \"type\": \"number\"\n              },\n              \"tradingExpenseRatio\": {\n                \"type\": \"number\"\n              },\n              \"totalFundExpenses\": {\n                \"type\": \"number\"\n              }\n            },\n            \"required\": [\n              \"managementExpenseRatio\",\n              \"tradingExpenseRatio\",\n              \"totalFundExpenses\"\n            ]\n          }\n        },\n        \"required\": [\n          \"salesCharges\",\n          \"fundExpenses\"\n        ]\n      }\n    },\n    \"required\": [\n      \"yearByYearReturns\",\n      \"bestWorst3MonthReturns\",\n      \"averageReturn\",\n      \"investorInfo\",\n      \"taxInformation\",\n      \"costs\"\n    ]\n  },\n  \"fundInformation\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"fees\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"name\": {\n              \"type\": \"string\"\n            },\n            \"description\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"name\",\n            \"description\"\n          ]\n        }\n      },\n      \"rights\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      },\n      \"contactInformation\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"companyName\": {\n            \"type\": \"string\"\n          },\n          \"address\": {\n            \"type\": \"string\"\n          },\n          \"phone\": {\n            \"type\": \"string\"\n          },\n          \"email\": {\n            \"type\": \"string\"\n          },\n          \"website\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"companyName\",\n          \"address\",\n          \"phone\",\n          \"email\",\n          \"website\"\n        ]\n      },\n      \"additionalResources\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"brochure\": {\n            \"type\": \"string\"\n          },\n          \"website\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"brochure\",\n          \"website\"\n        ]\n      }\n    },\n    \"required\": [\n      \"fees\",\n      \"rights\",\n      \"contactInformation\",\n      \"additionalResources\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "fundFacts",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "fundFacts"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"fund\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"type\": \"string\"\n      },\n      \"date\": {\n        \"type\": \"string\",\n        \"format\": \"date\"\n      },\n      \"fundCode\": {\n        \"type\": \"string\"\n      },\n      \"dateSeriesStarted\": {\n        \"type\": \"string\",\n        \"format\": \"date\"\n      },\n      \"totalValue\": {\n        \"type\": \"string\"\n      },\n      \"managementExpenseRatio\": {\n        \"type\": \"string\"\n      },\n      \"fundManager\": {\n        \"type\": \"string\"\n      },\n      \"portfolioManager\": {\n        \"type\": \"string\"\n      },\n      \"subAdvisor\": {\n        \"type\": \"string\"\n      },\n      \"minimumInvestment\": {\n        \"type\": \"string\"\n      },\n      \"topInvestments\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"name\": {\n              \"type\": \"string\"\n            },\n            \"percentage\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"name\",\n            \"percentage\"\n          ]\n        }\n      },\n      \"totalNumberOfInvestments\": {\n        \"type\": \"integer\"\n      },\n      \"investmentMix\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"category\": {\n              \"type\": \"string\"\n            },\n            \"percentage\": {\n              \"type\": \"string\"\n            }\n          },\n          \"required\": [\n            \"category\",\n            \"percentage\"\n          ]\n        }\n      },\n      \"riskRating\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"date\",\n      \"fundCode\",\n      \"dateSeriesStarted\",\n      \"totalValue\",\n      \"managementExpenseRatio\",\n      \"fundManager\",\n      \"portfolioManager\",\n      \"subAdvisor\",\n      \"minimumInvestment\",\n      \"topInvestments\",\n      \"totalNumberOfInvestments\",\n      \"investmentMix\",\n      \"riskRating\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "fund",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "fund"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"name\": {\n    \"type\": \"string\"\n  },\n  \"date\": {\n    \"type\": \"string\",\n    \"format\": \"date\"\n  },\n  \"fundCode\": {\n    \"type\": \"string\"\n  },\n  \"dateSeriesStarted\": {\n    \"type\": \"string\",\n    \"format\": \"date\"\n  },\n  \"totalValue\": {\n    \"type\": \"string\"\n  },\n  \"managementExpenseRatio\": {\n    \"type\": \"string\"\n  },\n  \"fundManager\": {\n    \"type\": \"string\"\n  },\n  \"portfolioManager\": {\n    \"type\": \"string\"\n  },\n  \"subAdvisor\": {\n    \"type\": \"string\"\n  },\n  \"minimumInvestment\": {\n    \"type\": \"string\"\n  },\n  \"topInvestments\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"percentage\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"name\",\n        \"percentage\"\n      ]\n    }\n  },\n  \"totalNumberOfInvestments\": {\n    \"type\": \"integer\"\n  },\n  \"investmentMix\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"category\": {\n          \"type\": \"string\"\n        },\n        \"percentage\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"category\",\n        \"percentage\"\n      ]\n    }\n  },\n  \"riskRating\": {\n    \"type\": \"string\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "investmentFundDocument",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "investmentFundDocument"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"yearByYearReturns\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"year\": {\n          \"type\": \"integer\"\n        },\n        \"returnPercentage\": {\n          \"type\": \"number\"\n        }\n      },\n      \"required\": [\n        \"year\",\n        \"returnPercentage\"\n      ]\n    }\n  },\n  \"bestWorst3MonthReturns\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"bestReturn\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"percentage\": {\n            \"type\": \"number\"\n          },\n          \"date\": {\n            \"type\": \"string\",\n            \"format\": \"date\"\n          },\n          \"investmentValue\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"percentage\",\n          \"date\",\n          \"investmentValue\"\n        ]\n      },\n      \"worstReturn\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"percentage\": {\n            \"type\": \"number\"\n          },\n          \"date\": {\n            \"type\": \"string\",\n            \"format\": \"date\"\n          },\n          \"investmentValue\": {\n            \"type\": \"string\"\n          }\n        },\n        \"required\": [\n          \"percentage\",\n          \"date\",\n          \"investmentValue\"\n        ]\n      }\n    },\n    \"required\": [\n      \"bestReturn\",\n      \"worstReturn\"\n    ]\n  },\n  \"averageReturn\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"initialInvestment\": {\n        \"type\": \"number\"\n      },\n      \"finalValue\": {\n        \"type\": \"number\"\n      },\n      \"annualCompoundReturn\": {\n        \"type\": \"number\"\n      }\n    },\n    \"required\": [\n      \"initialInvestment\",\n      \"finalValue\",\n      \"annualCompoundReturn\"\n    ]\n  },\n  \"investorInfo\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"targetInvestors\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      },\n      \"investmentGoals\": {\n        \"type\": \"array\",\n        \"items\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"required\": [\n      \"targetInvestors\",\n      \"investmentGoals\"\n    ]\n  },\n  \"taxInformation\": {\n    \"type\": \"string\"\n  },\n  \"costs\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"salesCharges\": {\n        \"type\": \"string\"\n      },\n      \"fundExpenses\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"managementExpenseRatio\": {\n            \"type\": \"number\"\n          },\n          \"tradingExpenseRatio\": {\n            \"type\": \"number\"\n          },\n          \"totalFundExpenses\": {\n            \"type\": \"number\"\n          }\n        },\n        \"required\": [\n          \"managementExpenseRatio\",\n          \"tradingExpenseRatio\",\n          \"totalFundExpenses\"\n        ]\n      }\n    },\n    \"required\": [\n      \"salesCharges\",\n      \"fundExpenses\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "bestWorst3MonthReturns",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "bestWorst3MonthReturns"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"bestReturn\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"percentage\": {\n        \"type\": \"number\"\n      },\n      \"date\": {\n        \"type\": \"string\",\n        \"format\": \"date\"\n      },\n      \"investmentValue\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"percentage\",\n      \"date\",\n      \"investmentValue\"\n    ]\n  },\n  \"worstReturn\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"percentage\": {\n        \"type\": \"number\"\n      },\n      \"date\": {\n        \"type\": \"string\",\n        \"format\": \"date\"\n      },\n      \"investmentValue\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"percentage\",\n      \"date\",\n      \"investmentValue\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "bestReturn",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "bestReturn"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"percentage\": {\n    \"type\": \"number\"\n  },\n  \"date\": {\n    \"type\": \"string\",\n    \"format\": \"date\"\n  },\n  \"investmentValue\": {\n    \"type\": \"string\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "worstReturn",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "worstReturn"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"percentage\": {\n    \"type\": \"number\"\n  },\n  \"date\": {\n    \"type\": \"string\",\n    \"format\": \"date\"\n  },\n  \"investmentValue\": {\n    \"type\": \"string\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "averageReturn",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "averageReturn"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"initialInvestment\": {\n    \"type\": \"number\"\n  },\n  \"finalValue\": {\n    \"type\": \"number\"\n  },\n  \"annualCompoundReturn\": {\n    \"type\": \"number\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "investorInfo",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "investorInfo"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"targetInvestors\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"string\"\n    }\n  },\n  \"investmentGoals\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"string\"\n    }\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "costs",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "costs"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"salesCharges\": {\n    \"type\": \"string\"\n  },\n  \"fundExpenses\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"managementExpenseRatio\": {\n        \"type\": \"number\"\n      },\n      \"tradingExpenseRatio\": {\n        \"type\": \"number\"\n      },\n      \"totalFundExpenses\": {\n        \"type\": \"number\"\n      }\n    },\n    \"required\": [\n      \"managementExpenseRatio\",\n      \"tradingExpenseRatio\",\n      \"totalFundExpenses\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "fundExpenses",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "fundExpenses"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"managementExpenseRatio\": {\n    \"type\": \"number\"\n  },\n  \"tradingExpenseRatio\": {\n    \"type\": \"number\"\n  },\n  \"totalFundExpenses\": {\n    \"type\": \"number\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "fundInformation",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "fundInformation"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"fees\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"name\": {\n          \"type\": \"string\"\n        },\n        \"description\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"name\",\n        \"description\"\n      ]\n    }\n  },\n  \"rights\": {\n    \"type\": \"array\",\n    \"items\": {\n      \"type\": \"string\"\n    }\n  },\n  \"contactInformation\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"companyName\": {\n        \"type\": \"string\"\n      },\n      \"address\": {\n        \"type\": \"string\"\n      },\n      \"phone\": {\n        \"type\": \"string\"\n      },\n      \"email\": {\n        \"type\": \"string\"\n      },\n      \"website\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"companyName\",\n      \"address\",\n      \"phone\",\n      \"email\",\n      \"website\"\n    ]\n  },\n  \"additionalResources\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"brochure\": {\n        \"type\": \"string\"\n      },\n      \"website\": {\n        \"type\": \"string\"\n      }\n    },\n    \"required\": [\n      \"brochure\",\n      \"website\"\n    ]\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "contactInformation",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "contactInformation"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"companyName\": {\n    \"type\": \"string\"\n  },\n  \"address\": {\n    \"type\": \"string\"\n  },\n  \"phone\": {\n    \"type\": \"string\"\n  },\n  \"email\": {\n    \"type\": \"string\"\n  },\n  \"website\": {\n    \"type\": \"string\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                },
+                {
+                    "name": "additionalResources",
+                    "symbolSize": 50,
+                    "label": {
+                        "formatter": "additionalResources"
+                    },
+                    "value": "object",
+                    "tooltip": {
+                        "formatter": "Type: object\n{\n  \"brochure\": {\n    \"type\": \"string\"\n  },\n  \"website\": {\n    \"type\": \"string\"\n  }\n}"
+                    },
+                    "itemStyle": {
+                        "color": "#1f77b4"
+                    }
+                }
+            ],
+            "edgeLabel": {
+                "show": false,
+                "margin": 8
+            },
+            "edgeSymbol": [
+                "none",
+                "arrow"
+            ],
+            "edgeSymbolSize": [
+                10,
+                10
+            ],
+            "links": [
+                {
+                    "source": "Comprehensive Fund Document",
+                    "target": "fundFacts",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "fundFacts",
+                    "target": "fund",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "Comprehensive Fund Document",
+                    "target": "investmentFundDocument",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "investmentFundDocument",
+                    "target": "bestWorst3MonthReturns",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "bestWorst3MonthReturns",
+                    "target": "bestReturn",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "bestWorst3MonthReturns",
+                    "target": "worstReturn",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "investmentFundDocument",
+                    "target": "averageReturn",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "investmentFundDocument",
+                    "target": "investorInfo",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "investmentFundDocument",
+                    "target": "costs",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "costs",
+                    "target": "fundExpenses",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "Comprehensive Fund Document",
+                    "target": "fundInformation",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "fundInformation",
+                    "target": "contactInformation",
+                    "tooltip": {
+                        "show": false
+                    }
+                },
+                {
+                    "source": "fundInformation",
+                    "target": "additionalResources",
+                    "tooltip": {
+                        "show": false
+                    }
+                }
+            ],
+            "rippleEffect": {
+                "show": true,
+                "brushType": "stroke",
+                "scale": 2.5,
+                "period": 4
+            }
+        }
+    ],
+    "legend": [
+        {
+            "data": [],
+            "selected": {},
+            "show": true,
+            "padding": 5,
+            "itemGap": 10,
+            "itemWidth": 25,
+            "itemHeight": 14,
+            "backgroundColor": "transparent",
+            "borderColor": "#ccc",
+            "borderRadius": 0,
+            "pageButtonItemGap": 5,
+            "pageButtonPosition": "end",
+            "pageFormatter": "{current}/{total}",
+            "pageIconColor": "#2f4554",
+            "pageIconInactiveColor": "#aaa",
+            "pageIconSize": 15,
+            "animationDurationUpdate": 800,
+            "selector": false,
+            "selectorPosition": "auto",
+            "selectorItemGap": 7,
+            "selectorButtonGap": 10
+        }
+    ],
+    "tooltip": {
+        "show": true,
+        "trigger": "item",
+        "triggerOn": "mousemove|click",
+        "axisPointer": {
+            "type": "line"
+        },
+        "showContent": true,
+        "alwaysShowContent": false,
+        "showDelay": 0,
+        "hideDelay": 100,
+        "enterable": false,
+        "confine": false,
+        "appendToBody": false,
+        "transitionDuration": 0.4,
+        "textStyle": {
+            "fontSize": 14
+        },
+        "borderWidth": 0,
+        "padding": 5,
+        "order": "seriesAsc"
+    },
+    "title": [
+        {
+            "show": true,
+            "text": "Entity-Relationship Graph",
+            "target": "blank",
+            "subtarget": "blank",
+            "padding": 5,
+            "itemGap": 10,
+            "textAlign": "auto",
+            "textVerticalAlign": "auto",
+            "triggerEvent": false
+        }
+    ],
+    "toolbox": {
+        "show": true,
+        "orient": "horizontal",
+        "itemSize": 15,
+        "itemGap": 10,
+        "left": "80%",
+        "feature": {
+            "saveAsImage": {
+                "type": "png",
+                "name": "graph_image",
+                "backgroundColor": "auto",
+                "connectedBackgroundColor": "#fff",
+                "show": true,
+                "title": "Save as Image",
+                "pixelRatio": 1
+            },
+            "restore": {
+                "show": true,
+                "title": "Restore"
+            },
+            "dataView": {
+                "show": true,
+                "title": "Data View",
+                "readOnly": false,
+                "lang": [
+                    "Data View",
+                    "Close",
+                    "Refresh"
+                ],
+                "backgroundColor": "#fff",
+                "textareaColor": "#fff",
+                "textareaBorderColor": "#333",
+                "textColor": "#000",
+                "buttonColor": "#c23531",
+                "buttonTextColor": "#fff"
+            }
+        }
+    }
+};
+        chart_b8096c131051489eb70295abd4d8084d.setOption(option_b8096c131051489eb70295abd4d8084d);
+            window.addEventListener('resize', function(){
+                chart_b8096c131051489eb70295abd4d8084d.resize();
+            })
+    </script>
+</body>
+</html>

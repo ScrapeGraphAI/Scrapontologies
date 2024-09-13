@@ -1,3 +1,4 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any
 from .primitives import Entity, Relation
@@ -5,6 +6,9 @@ from .parsers.base_parser import BaseParser
 from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT
 import requests
 import json
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Extractor(ABC):
     @abstractmethod
@@ -73,7 +77,7 @@ class FileExtractor(Extractor):
         
         self.parser.set_entities(entities)
         self.parser.set_relations(relations)
-        print(f"Entity '{entity_id}' and its related relations have been deleted.")
+        logger.info(f"Entity '{entity_id}' and its related relations have been deleted.")
 
     def _delete_relation(self, relation_id: str) -> None:
         """Delete a relation."""
@@ -83,7 +87,7 @@ class FileExtractor(Extractor):
         relations = [r for r in relations if not (r.source == source and r.target == target and r.name == name)]
         
         self.parser.set_relations(relations)
-        print(f"Relation '{name}' between '{source}' and '{target}' has been deleted.")
+        logger.info(f"Relation '{name}' between '{source}' and '{target}' has been deleted.")
 
     def _get_llm_response(self, prompt: str) -> str:
         """Get a response from the language model."""
@@ -122,8 +126,8 @@ class FileExtractor(Extractor):
             # Update the parser's entities
             self.parser.set_entities(updated_entities)
             
-            print(f"Entities updated. New count: {len(updated_entities)}")
+            logger.info(f"Entities updated. New count: {len(updated_entities)}")
             return updated_entities
         except json.JSONDecodeError:
-            print("Error: Unable to parse the LLM response.")
+            logger.error("Error: Unable to parse the LLM response.")
             return existing_entities
