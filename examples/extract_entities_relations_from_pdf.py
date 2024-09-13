@@ -1,13 +1,19 @@
 from scrapeschema import FileExtractor, PDFParser
+from scrapeschema.renderers import PyechartsRenderer
 import os
 from dotenv import load_dotenv
+load_dotenv()  # Load environment variables from .env file
+
+# Get the OpenAI API key from the environment variables
+api_key = os.getenv("OPENAI_API_KEY")
+
+# get current directory
+curr_dirr = os.path.dirname(os.path.abspath(__file__))
 
 def main():
-    load_dotenv()  # Load environment variables from .env file
-    api_key = os.getenv("OPENAI_API_KEY")
-
-    # Path to your PDF file
-    pdf_path = "./test.pdf"
+    # Path to the PDF file
+    pdf_name = "test.pdf"
+    pdf_path = os.path.join(curr_dirr, pdf_name)
 
     # Create a PDFParser instance with the API key
     pdf_parser = PDFParser(api_key)
@@ -17,12 +23,18 @@ def main():
 
     # Extract entities from the PDF
     entities = pdf_extractor.extract_entities()
-
-    print(entities)
-
     relations = pdf_extractor.extract_relations()
-    print(relations)
-    
+
+    # Initialize the PyechartsRenderer
+    renderer = PyechartsRenderer(repulsion=2000, title="Entity-Relationship Graph")
+
+    # Render the graph using the provided nodes and links
+    graph = renderer.render(entities, relations, output_path="graph.html")
+
+    print(graph)
 
 if __name__ == "__main__":
     main()
+
+
+    

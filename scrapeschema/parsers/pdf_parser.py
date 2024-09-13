@@ -4,8 +4,6 @@ from ..primitives import Entity, Relation
 import base64
 import os
 import tempfile
-from pdf2image import convert_from_path
-from pdf2image.exceptions import PDFInfoNotInstalledError, PDFPageCountError, PDFSyntaxError
 import requests
 import json
 from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT
@@ -13,6 +11,7 @@ from PIL import Image
 import inspect
 import subprocess
 import logging
+import re
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -88,10 +87,13 @@ def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
                 if not os.path.exists(image_path):
                     break
                 logging.info(f"Loading image: {image_path}")
-                images.append(Image.open(image_path))
+                
+                # Using context manager to ensure the file is closed properly after use
+                with Image.open(image_path) as img:
+                    # Append a copy of the image to the list, closing the original image
+                    images.append(img.copy())
                 page_num += 1
 
-            logging.info(f"Total pages processed: {page_num - 1}")
             return images
 
         except subprocess.CalledProcessError as e:
@@ -99,9 +101,6 @@ def load_pdf_as_images(pdf_path: str) -> Optional[List[Image.Image]]:
             logging.error(f"Command output: {e.output}")
             logging.error(f"Command error: {e.stderr}")
             return None
-
-    # The temporary directory and its contents are automatically cleaned up
-    # when exiting the 'with' block
 
 def save_image_to_temp(image: Image.Image) -> str:
     """
@@ -117,7 +116,7 @@ def save_image_to_temp(image: Image.Image) -> str:
         image.save(temp_file.name, 'JPEG')
         return temp_file.name
 
-def process_pdf(pdf_path: str) -> List[str] or None: # type: ignore
+def process_pdf(pdf_path: str) -> Optional[List[str]]:
     """
     Processes a PDF file and converts each page to a base64 encoded image.
 
@@ -130,17 +129,29 @@ def process_pdf(pdf_path: str) -> List[str] or None: # type: ignore
     if not os.path.exists(pdf_path):
         raise FileNotFoundError(f"PDF file not found: {pdf_path}")
     
+    # Load PDF as images
     images = load_pdf_as_images(pdf_path)
     if not images:
         return None
 
     base64_images = []
+
     for page_num, image in enumerate(images, start=1):
-        temp_image_path = save_image_to_temp(image)
-        base64_image = encode_image(temp_image_path)
-        base64_images.append(base64_image)
-        os.unlink(temp_image_path)
-        print(f"Processed page {page_num}")
+        temp_image_path = None
+        try:
+            # Save image to temporary file
+            temp_image_path = save_image_to_temp(image)
+            
+            # Convert image to base64
+            base64_image = encode_image(temp_image_path)
+            base64_images.append(base64_image)
+
+        except Exception as e:
+            logging.error(f"Error processing page {page_num}: {e}")
+        finally:
+            # Ensure temp file is deleted even in case of an error
+            if temp_image_path and os.path.exists(temp_image_path):
+                os.unlink(temp_image_path)
 
     return base64_images
 
@@ -178,6 +189,20 @@ class PDFParser(BaseParser):
         traverse_schema(entities_json_schema)
         return entities
 
+    def _extract_json_content(self, input_string: str) -> str:
+    # Use regex to match content between ```json and ```
+        match = re.search(r"```json\s*(.*?)\s*```", input_string, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return ""
+    
+    def _extract_python_content(self, input_string: str) -> str:
+        # Use regex to match content between ```python and ```
+        match = re.search(r"```python\s*(.*?)\s*```", input_string, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return ""
+
     def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
         existing_entities = self._entities
 
@@ -189,7 +214,8 @@ class PDFParser(BaseParser):
 
         # Use _get_llm_response instead of direct API call
         response = self._get_llm_response(prompt)
-        response = response[8:-3]  # Remove ```json and ``` if present
+        # parse the response which is inside ```json and ```, use regex to extract the json
+        response = self._extract_json_content(response)
         
         try:
             updated_entities_data = json.loads(response)
@@ -225,6 +251,7 @@ class PDFParser(BaseParser):
         
         # Use _get_llm_response instead of direct API call
         relations_answer_code = self._get_llm_response(relations_prompt)
+        relations_answer_code = self._extract_python_content(relations_answer_code)
 
         # Create a new dictionary to store the local variables
         local_vars = {}
@@ -285,7 +312,7 @@ class PDFParser(BaseParser):
         if base64_images:
             page_answers = self._generate_json_schema(base64_images)
             json_schema = self._merge_json_schemas(page_answers)
-            json_schema = json_schema[8:-3]
+            json_schema = self._extract_json_content(json_schema)
 
             print("\n PDF JSON Schema:")
             print(json_schema)
@@ -329,6 +356,7 @@ class PDFParser(BaseParser):
             
             # Use _get_llm_response with image
             answer = self._get_llm_response(prompt, image_url=f"data:image/jpeg;base64,{base64_image}")
+            answer = self._extract_json_content(answer)
             page_answers.append(f"Page {page_num}: {answer}")
             print(f"Processed page {page_num}")
 
@@ -337,7 +365,7 @@ class PDFParser(BaseParser):
     def _merge_json_schemas(self, page_answers: List[str]) -> str:
         digraph_prompt = "Generate a unique json schema starting from the following \
                           \n\n" + "\n\n".join(page_answers) + "\n\n \
-                          Remember to provide only the json schema, without any comments before or after the json schema"
+                          Remember to provide only the json schema without any comments, wrapped in backticks (`) like ```json ... ``` and nothing else."
 
         # Use _get_llm_response instead of direct API call
         digraph_code = self._get_llm_response(digraph_prompt)

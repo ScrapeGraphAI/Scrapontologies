@@ -1,6 +1,7 @@
 # ScrapeSchema
 
-ScrapeSchema is a Python-based library designed to extract entities and relationship from files. 
+![graph](docs/assets/graph_pyecharts.png)
+
 The generate schemas can be used to infer from document to use for tables in a database or for generating knowledge graph.
 
 ## Features

@@ -6,11 +6,16 @@ def main():
     load_dotenv()  # Load environment variables from .env file
     api_key = os.getenv("OPENAI_API_KEY")
 
-    # Path to your PDF file
-    pdf_path = "./test.pdf"
+    # get current directory
+    curr_dirr = os.path.dirname(os.path.abspath(__file__))
+    pdf_name = "test.pdf"
+    pdf_path = os.path.join(curr_dirr, pdf_name)
 
     # Create a PDFParser instance with the API key
-    pdf_parser = PDFParser(api_key)
+    pdf_parser = PDFParser(
+        api_key=api_key,
+        model="gpt-4o-mini"
+    )
 
     # Create a FileExtraxctor instance with the PDF parser
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)

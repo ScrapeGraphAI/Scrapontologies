@@ -30,7 +30,7 @@ class FileExtractor(Extractor):
 
     def extract_entities(self) -> List[Entity]:
         new_entities = self.parser.extract_entities(self.file_path)
-        return self.update_entities(new_entities)
+        return new_entities
 
     def extract_relations(self) -> List[Relation]:
         return self.parser.extract_relations(self.file_path)

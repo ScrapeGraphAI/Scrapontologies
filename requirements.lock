@@ -17,10 +17,7 @@ charset-normalizer==3.3.2
 idna==3.8
     # via requests
     # via scrapeschema
-pdf2image==1.17.0
-    # via scrapeschema
 pillow==10.4.0
-    # via pdf2image
     # via scrapeschema
 python-dotenv==1.0.1
     # via scrapeschema
