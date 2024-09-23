@@ -203,3 +203,19 @@ New entities to integrate:
 Please provide the updated list of entities as a JSON array. Each entity should be a JSON object with 'id', 'type', and 'attributes' fields.
 Provide only the JSON array, wrapped in backticks (`) like ```json ... ``` and nothing else.
 """
+
+UPDATE_SCHEMA_PROMPT = """
+You need to update the json schema with the new one, avoiding duplicates and reconciling any conflicts. Here are the rules:
+
+1. If a new entity has the same ID as an existing entity, update the existing entity with any new or changed attributes.
+2. Add any completely new entities that don't match with existing ones.
+3. Try to maintain the base structure you have for the existing entities, adding new entities or updating existing entities
+4. If exist entities is empty, copy the new entity into the existing entity as they are.
+{existing_schema}
+
+With this json schema:
+{new_schema}
+
+Please provide the updated json schema as a JSON object.
+Provide only the JSON object, wrapped in backticks (`) like ```json ... ``` and nothing else.
+"""
