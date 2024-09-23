@@ -4,7 +4,6 @@ from ..primitives import Entity, Relation
 import base64
 import os
 import tempfile
-import requests
 import json
 from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT
 from PIL import Image
@@ -13,6 +12,7 @@ import subprocess
 import logging
 import re
 from ..llm_client import LLMClient
+from requests.exceptions import ReadTimeout
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -240,7 +240,7 @@ class PDFParser(BaseParser):
             logging.error("Error: Unable to parse the LLM response.")
             return existing_entities
 
-    def extract_relations(self, file_path: str) -> List[Relation]:
+    def extract_relations(self, file_path: Optional[str] = None) -> List[Relation]:
         """
         Extracts relations from a PDF file.
 
@@ -250,11 +250,12 @@ class PDFParser(BaseParser):
         Returns:
             List[Relation]: A list of extracted relations.
         """
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"PDF file not found: {file_path}")
-        
-        if not self._entities or len(self._entities) == 0:
-            self.extract_entities(file_path)
+        if file_path is not None:
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(f"PDF file not found: {file_path}")
+            
+            if not self._entities or len(self._entities) == 0:
+                self.extract_entities(file_path)
 
         relation_class_str = inspect.getsource(Relation)
         relations_prompt = RELATIONS_PROMPT.format(
@@ -330,6 +331,10 @@ class PDFParser(BaseParser):
             logging.info(json_schema)
             # json schema is a valid json schema but its a string convert it to a python dict
             entities_json_schema = json.loads(json_schema)
+            
+            # Assign the generated schema to self._json_schema
+            self._json_schema = entities_json_schema
+            
             return entities_json_schema
 
     def _generate_digraph(self, base64_images: List[str]) -> List[str]:

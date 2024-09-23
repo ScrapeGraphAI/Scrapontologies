@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ..primitives import Entity, Relation
 from ..llm_client import LLMClient
 
@@ -16,6 +16,7 @@ class BaseParser(ABC):
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.llm_client.get_api_key()}"
         }
+        self._json_schema = {}
         self._entities = []
         self._relations = []
 
@@ -24,7 +25,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def extract_relations(self, file_path: str) -> List[Relation]:
+    def extract_relations(self, file_path: Optional[str] = None) -> List[Relation]:
         pass
 
     @abstractmethod
@@ -61,6 +62,9 @@ class BaseParser(ABC):
     def get_relations(self):
         return self._relations
     
+    def get_json_schema(self):
+        return self._json_schema
+    
     def set_entities(self, entities: List[Entity]):
         if not isinstance(entities, list) or not all(isinstance(entity, Entity) for entity in entities):
             raise TypeError("entities must be a List of Entity objects")
@@ -70,3 +74,35 @@ class BaseParser(ABC):
         if not isinstance(relations, list) or not all(isinstance(relation, Relation) for relation in relations):
             raise TypeError("relations must be a List of Relation objects")
         self._relations = relations
+
+    def set_json_schema(self, schema: Dict[str, Any]):
+        self._json_schema = schema
+
+    def extract_entities_from_json_schema(self, json_schema: Dict[str, Any]) -> List[Entity]:
+        """
+        Extracts entities from a given JSON schema.
+
+        Args:
+            json_schema (Dict[str, Any]): The JSON schema to extract entities from.
+
+        Returns:
+            List[Entity]: A list of extracted entities.
+        """
+        entities = []
+
+        def traverse_schema(schema: Dict[str, Any], parent_id: str = None):
+            if isinstance(schema, dict):
+                entity_id = parent_id if parent_id else schema.get('title', 'root')
+                entity_type = schema.get('type', 'object')
+                attributes = schema.get('properties', {})
+
+                if attributes:
+                    entity = Entity(id=entity_id, type=entity_type, attributes=attributes)
+                    entities.append(entity)
+
+                for key, value in attributes.items():
+                    traverse_schema(value, key)
+
+        traverse_schema(json_schema)
+        self.set_entities(entities)
+        return entities
