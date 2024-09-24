@@ -174,17 +174,20 @@ class PDFParser(BaseParser):
 
         super().__init__(llm_client)
 
-    def extract_entities(self, file_path: str) -> List[Entity]:
+    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
-        new_entities = self._extract_entities_from_pdf(file_path)
+        new_entities = self._extract_entities_from_pdf(file_path, prompt)
         return self.update_entities(new_entities)
 
-    def _extract_entities_from_pdf(self, file_path: str) -> List[Entity]:
+    def _extract_entities_from_pdf(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
+        if prompt:
+            entities_json_schema = self.entities_json_schema(file_path, prompt)
+        else:
+            entities_json_schema = self.entities_json_schema(file_path)
+        
         entities = []
-        entities_json_schema = self.entities_json_schema(file_path)
-
         def traverse_schema(schema: Dict[str, Any], parent_id: str = None):
             if isinstance(schema, dict):
                 entity_id = parent_id if parent_id else schema.get('title', 'root')
@@ -233,6 +236,10 @@ class PDFParser(BaseParser):
             # Update the parser's entities
             self._entities = updated_entities
             
+            # print the updated entities
+            logging.info("Updated entities:")
+            for entity in updated_entities:
+                logging.info(entity.__dict__)
             logging.info(f"Entities updated. New count: {len(updated_entities)}")
             return updated_entities
         except json.JSONDecodeError as e:
@@ -240,7 +247,7 @@ class PDFParser(BaseParser):
             logging.error("Error: Unable to parse the LLM response.")
             return existing_entities
 
-    def extract_relations(self, file_path: Optional[str] = None) -> List[Relation]:
+    def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
         """
         Extracts relations from a PDF file.
 
@@ -250,41 +257,38 @@ class PDFParser(BaseParser):
         Returns:
             List[Relation]: A list of extracted relations.
         """
-        if file_path is not None:
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"PDF file not found: {file_path}")
-            
-            if not self._entities or len(self._entities) == 0:
-                self.extract_entities(file_path)
+        if file_path is not None and not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
+        if not self._entities or len(self._entities) == 0:
+            self.extract_entities(file_path, prompt)
 
         relation_class_str = inspect.getsource(Relation)
         relations_prompt = RELATIONS_PROMPT.format(
             entities=json.dumps([e.__dict__ for e in self._entities], indent=2),
             relation_class=relation_class_str
         )
-        
+        if prompt:
+            #append to the relations_prompt the prompt
+            relations_prompt += f"\n\n Extract only the relations that are required from the following user prompt:\n\n{prompt}"
+
+
         relations_answer_code = self.llm_client.get_response(relations_prompt)
         relations_answer_code = self._extract_python_content(relations_answer_code)
 
-        # Create a new dictionary to store the local variables
         local_vars = {}
-        
-        # Execute the code in the context of local_vars
         try:
             exec(relations_answer_code, globals(), local_vars)
         except Exception as e:
             logging.error(f"Error executing relations code: {e}")
             raise ValueError(f"The language model generated invalid code: {e}") from e
-        
-        # Extract the relations from local_vars
+
         relations_answer = local_vars.get('relations', [])
-        
         self._relations = relations_answer
         logging.info(f"Extracted relations: {relations_answer_code}")
 
-        return  self._relations
+        return self._relations
   
-        
     def plot_entities_schema(self, file_path: str) -> None:
         """
         Plots the entities schema from a PDF file.
@@ -307,7 +311,7 @@ class PDFParser(BaseParser):
             logging.info("digraph_code_execution----------------------------------")
             exec(digraph_code[9:-3])
 
-    def entities_json_schema(self, file_path: str) -> Dict[str, Any]:
+    def entities_json_schema(self, file_path: str, prompt: Optional[str] = None) -> Dict[str, Any]:
         """
         Generates a JSON schema of entities from a PDF file.
 
@@ -323,7 +327,7 @@ class PDFParser(BaseParser):
         base64_images = process_pdf(file_path)
 
         if base64_images:
-            page_answers = self._generate_json_schema(base64_images)
+            page_answers = self._generate_json_schema(base64_images, prompt)
             json_schema = self._merge_json_schemas(page_answers)
             json_schema = self._extract_json_content(json_schema)
 
@@ -365,17 +369,20 @@ class PDFParser(BaseParser):
         digraph_code = self.llm_client.get_response(digraph_prompt)
         return digraph_code
 
-    def _generate_json_schema(self, base64_images: List[str]) -> List[str]:
+    def _generate_json_schema(self, base64_images: List[str], prompt: Optional[str] = None) -> List[str]:
         page_answers = []
         for page_num, base64_image in enumerate(base64_images, start=1):
-            prompt = f"{JSON_SCHEMA_PROMPT} (Page {page_num})"
+            if prompt:
+                customized_prompt = f"{JSON_SCHEMA_PROMPT} extract only what is required from the following prompt:\
+                      {prompt} (Page {page_num})"
+            else:
+                customized_prompt = f"{JSON_SCHEMA_PROMPT} (Page {page_num})"
             
             image_data = f"data:image/jpeg;base64,{base64_image}"
             try:
-                answer = self.llm_client.get_response(prompt, image_url=image_data)
+                answer = self.llm_client.get_response(customized_prompt, image_url=image_data)
             except ReadTimeout:
                 logging.warning("Request to OpenAI API timed out. Retrying...")
-                # Implement retry logic or skip to the next image
                 continue
             answer = self._extract_json_content(answer)
             page_answers.append(f"Page {page_num}: {answer}")
