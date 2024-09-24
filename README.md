@@ -73,8 +73,11 @@ api_key = os.getenv("OPENAI_API_KEY")
 # Path to your PDF file
 pdf_path = "./test.pdf"
 
-# Create a PDFParser instance with the API key
-pdf_parser = PDFParser(api_key)
+# Create an LLMClient instance
+llm_client = LLMClient(api_key)
+
+# Create a PDFParser instance with the LLMClient
+pdf_parser = PDFParser(llm_client)
 
 # Create a FileExtraxctor instance with the PDF parser
 pdf_extractor = FileExtractor(pdf_path, pdf_parser)
