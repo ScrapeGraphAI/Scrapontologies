@@ -5,7 +5,7 @@ import base64
 import os
 import tempfile
 import json
-from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT
+from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT, EXTRACT_ENTITIES_CODE_PROMPT
 from PIL import Image
 import inspect
 import subprocess
@@ -187,7 +187,8 @@ class PDFParser(BaseParser):
         else:
             entities_json_schema = self.entities_json_schema(file_path)
         
-        entities = []
+        entities = [] 
+        '''
         def traverse_schema(schema: Dict[str, Any], parent_id: str = None):
             if isinstance(schema, dict):
                 entity_id = parent_id if parent_id else schema.get('title', 'root')
@@ -202,6 +203,18 @@ class PDFParser(BaseParser):
                     traverse_schema(value, key)
 
         traverse_schema(entities_json_schema)
+        '''
+        # pass to the llm the entities json schema:
+        prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
+        entities_code = self.llm_client.get_response(prompt)
+
+        # extract the python code from the entities_code remove the ```python and ```
+        entities_code = entities_code.replace("```python", "").replace("```", "")
+        # execute the code and get the entities
+        local_vars = {}
+        exec(entities_code, globals(), local_vars)
+        entities = local_vars.get('entities', [])
+        
         return entities
 
     def _extract_json_content(self, input_string: str) -> str:

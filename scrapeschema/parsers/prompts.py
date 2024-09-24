@@ -219,3 +219,29 @@ With this json schema:
 Please provide the updated json schema as a JSON object.
 Provide only the JSON object, wrapped in backticks (`) like ```json ... ``` and nothing else.
 """
+
+EXTRACT_ENTITIES_CODE_PROMPT = """
+You only have to create python code for extracting the entities from the \
+following json schema:\n\n{json_schema}
+
+You have to extract the entities with the following format:
+{entity_class}
+
+Takes as reference the following python code for building the entities:
+from scrapeschema import Entity
+
+# Define entities with nested attributes
+entities = [
+    Entity(id='investorInformation', type='object', attributes={{
+        'targetInvestors': 'string', 'investmentConsiderations': 'string'
+    }}),
+    Entity(id='costInformation', type='object', attributes={{
+        'salesCharges': 'string', 'fundExpenses': {{'object', 'properties': {{'managementExpenseRatio': 'number', 'tradingExpenseRatio': 'number', 'totalFundExpenses': 'number'}}}}
+    }}),
+    Entity(id='fundInformation', type='object', attributes={{
+        'fees': {{'array', 'items': 'string', 'contactInformation': {{'object', 'properties': {{'company':'string', 'address': 'string', 'phone': 'string', 'email': 'string', 'website': 'string'}}}}, 'additionalResources': {{'object', 'properties': {{'brochure': 'string', 'website': 'string'}}}}}}
+    }}),
+]
+
+Remember to generate only the Python code, nothing before or after the code.
+"""
