@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Any
+from typing import List, Tuple, Dict, Any, Optional
 from .primitives import Entity, Relation
 from .parsers.base_parser import BaseParser
 from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT, UPDATE_SCHEMA_PROMPT
@@ -53,12 +53,12 @@ class FileExtractor(Extractor):
         self.file_path = file_path
         self.parser = parser
 
-    def extract_entities(self) -> List[Entity]:
-        new_entities = self.parser.extract_entities(self.file_path)
+    def extract_entities(self, prompt: Optional[str] = None) -> List[Entity]:
+        new_entities = self.parser.extract_entities(self.file_path, prompt)
         return new_entities
 
-    def extract_relations(self) -> List[Relation]:
-        return self.parser.extract_relations(self.file_path)
+    def extract_relations(self, prompt: Optional[str] = None) -> List[Relation]:
+        return self.parser.extract_relations(self.file_path, prompt)
     
 
     def entities_json_schema(self) -> Dict[str, Any]:

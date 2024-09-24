@@ -21,11 +21,11 @@ class BaseParser(ABC):
         self._relations = []
 
     @abstractmethod
-    def extract_entities(self, file_path: str) -> List[Entity]:
+    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
         pass
 
     @abstractmethod
-    def extract_relations(self, file_path: Optional[str] = None) -> List[Relation]:
+    def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
         pass
 
     @abstractmethod
