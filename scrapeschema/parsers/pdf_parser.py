@@ -5,7 +5,7 @@ import base64
 import os
 import tempfile
 import json
-from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT, EXTRACT_ENTITIES_CODE_PROMPT
+from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT, EXTRACT_ENTITIES_CODE_PROMPT, FIX_CODE_PROMPT
 from PIL import Image
 import inspect
 import subprocess
@@ -178,32 +178,11 @@ class PDFParser(BaseParser):
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
-        new_entities = self._extract_entities_from_pdf(file_path, prompt)
-        return self.update_entities(new_entities)
-
-    def _extract_entities_from_pdf(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
         if prompt:
             entities_json_schema = self.entities_json_schema(file_path, prompt)
         else:
             entities_json_schema = self.entities_json_schema(file_path)
         
-        entities = [] 
-        '''
-        def traverse_schema(schema: Dict[str, Any], parent_id: str = None):
-            if isinstance(schema, dict):
-                entity_id = parent_id if parent_id else schema.get('title', 'root')
-                entity_type = schema.get('type', 'object')
-                attributes = schema.get('properties', {})
-
-                if attributes:
-                    entity = Entity(id=entity_id, type=entity_type, attributes=attributes)
-                    entities.append(entity)
-
-                for key, value in attributes.items():
-                    traverse_schema(value, key)
-
-        traverse_schema(entities_json_schema)
-        '''
         # pass to the llm the entities json schema:
         prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
         entities_code = self.llm_client.get_response(prompt)
@@ -212,10 +191,26 @@ class PDFParser(BaseParser):
         entities_code = entities_code.replace("```python", "").replace("```", "")
         # execute the code and get the entities
         local_vars = {}
-        exec(entities_code, globals(), local_vars)
-        entities = local_vars.get('entities', [])
+        max_retries = 3
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                exec(entities_code, globals(), local_vars)
+                break  # If successful, exit the loop
+            except Exception as e:
+                logging.error(f"Error executing entities code (attempt {retry_count + 1}): {e}")
+                if retry_count == max_retries - 1:
+                    logging.error("Max retries reached. Unable to execute entities code.")
+                    break
+                fix_code_prompt = FIX_CODE_PROMPT.format(code=entities_code, error=str(e))
+                fixed_code = self.llm_client.get_response(fix_code_prompt)
+                entities_code = fixed_code  # Update entities_code with the fixed version
+                retry_count += 1
         
-        return entities
+        new_entities = local_vars.get('entities', [])
+        
+        return self.update_entities(new_entities)
+
 
     def _extract_json_content(self, input_string: str) -> str:
     # Use regex to match content between ```json and ```

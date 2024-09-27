@@ -245,3 +245,14 @@ entities = [
 
 Remember to generate only the Python code, nothing before or after the code.
 """
+
+FIX_CODE_PROMPT = """
+The following Python code has an error. Please fix the code and provide only the corrected code without any explanations.
+
+Error: {error}
+
+Code to fix:
+{code}
+
+Please provide only the corrected Python code, nothing else before or after the code.
+"""
