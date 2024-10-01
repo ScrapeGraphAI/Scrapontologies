@@ -1,4 +1,4 @@
-# ScrapeSchema
+# Scrapontology
 
 ![graph](docs/assets/graph_pyecharts.png)
 
@@ -52,18 +52,18 @@ After installation, restart your terminal or command prompt for the changes to t
 If doesn't work try the magic restart button.
 
 #### Installation
-After installing the prerequisites and dependencies, you can start using ScrapeSchema to extract entities and their schema from PDFs.
+After installing the prerequisites and dependencies, you can start using scrape_schema to extract entities and their schema from PDFs.
 
 Here’s a basic example:
 ```bash
-git clone https://github.com/ScrapeGraphAI/ScrapeSchema
+git clone https://github.com/ScrapeGraphAI/scrape_schema
 pip install -r requirements.txt
 ```
 
 ## Usage
 
 ```python
-from scrapeschema import FileExtractor, PDFParser
+from scrape_schema import FileExtractor, PDFParser
 import os
 from dotenv import load_dotenv
 

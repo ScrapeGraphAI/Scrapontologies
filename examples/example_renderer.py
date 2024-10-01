@@ -1,5 +1,5 @@
-from scrapeschema import Entity, Relation
-from scrapeschema.renderers import PyechartsRenderer
+from scrapontology import Entity, Relation
+from scrapontology.renderers import PyechartsRenderer
 
 # Define entities with nested attributes
 entities = [

@@ -1,7 +1,7 @@
 [project]
-name = "scrapeschema"
+name = "scrapontology"
 version = "0.0.1"
-description = "Library for creating ontologies from documents using LLM"
+description = "Library for extracting schemas and building ontologies from documents using LLM"
 authors = [
     { name = "Marco Vinciguerra", email = "mvincig11@gmail.com" },
     { name = "Marco Perini", email = "perinim.98@gmail.com" },
@@ -15,16 +15,17 @@ dependencies = [
     "pillow==10.4.0",
     "python-dotenv==1.0.1",
     "requests==2.32.3",
-    "urllib3==2.2.2"
+    "urllib3==2.2.2",
+    "langgraph==0.2.31",
 ]
 
 license = "MIT"
 readme = "README.md"
 homepage = "https://scrapegraphai.com/"
-repository = "https://github.com/ScrapeGraphAI/ScrapeSchema"
+repository = "https://github.com/ScrapeGraphAI/scrape_schema"
 documentation = ""
 keywords = [
-    "scrapeschema",
+    "scrape_schema",
     "ontologies",
     "documents",
     "knowledge graph",
@@ -45,6 +46,9 @@ keywords = [
     "web scraping tool",
     "webscraping",
     "graph",
+    "structured data",
+    "unstructured data"
+
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -73,6 +77,6 @@ dev-dependencies = [
 ]
 
 [tool.rye.scripts]
-pylint-local = "pylint scrapeschema/**/*.py"
-pylint-ci = "pylint --disable=C0114,C0115,C0116 --exit-zero scrapeschema/**/*.py"
+pylint-local = "pylint scrape_schema/**/*.py"
+pylint-ci = "pylint --disable=C0114,C0115,C0116 --exit-zero scrape_schema/**/*.py"
 update-requirements = "python 'manual deployment/autorequirements.py'"

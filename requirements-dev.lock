@@ -12,29 +12,44 @@
 -e file:.
 alabaster==0.7.16
     # via sphinx
-astroid==3.2.4
+annotated-types==0.7.0
+    # via pydantic
+anyio==4.6.0
+    # via httpx
+astroid==3.3.4
     # via pylint
 babel==2.16.0
     # via sphinx
 beautifulsoup4==4.12.3
     # via furo
 certifi==2024.7.4
+    # via httpcore
+    # via httpx
     # via requests
-    # via scrapeschema
+    # via scrapontology
 charset-normalizer==3.3.2
     # via requests
-    # via scrapeschema
-dill==0.3.8
+    # via scrapontology
+dill==0.3.9
     # via pylint
 docutils==0.19
     # via sphinx
 exceptiongroup==1.2.2
+    # via anyio
     # via pytest
 furo==2024.5.6
-    # via scrapeschema
+    # via scrapontology
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.5
+    # via httpx
+httpx==0.27.2
+    # via langsmith
 idna==3.8
+    # via anyio
+    # via httpx
     # via requests
-    # via scrapeschema
+    # via scrapontology
 imagesize==1.4.1
     # via sphinx
 importlib-metadata==8.5.0
@@ -46,44 +61,73 @@ isort==5.13.2
 jinja2==3.1.4
     # via pyecharts
     # via sphinx
+jsonpatch==1.33
+    # via langchain-core
+jsonpointer==3.0.0
+    # via jsonpatch
+langchain-core==0.3.7
+    # via langgraph
+    # via langgraph-checkpoint
+langgraph==0.2.31
+    # via scrapontology
+langgraph-checkpoint==1.0.14
+    # via langgraph
+langsmith==0.1.129
+    # via langchain-core
 markupsafe==2.1.5
     # via jinja2
 mccabe==0.7.0
     # via pylint
+msgpack==1.1.0
+    # via langgraph-checkpoint
+orjson==3.10.7
+    # via langsmith
 packaging==24.1
+    # via langchain-core
     # via pytest
     # via sphinx
 pillow==10.4.0
-    # via scrapeschema
-platformdirs==4.3.2
+    # via scrapontology
+platformdirs==4.3.6
     # via pylint
 pluggy==1.5.0
     # via pytest
 prettytable==3.11.0
     # via pyecharts
+pydantic==2.9.2
+    # via langchain-core
+    # via langsmith
+pydantic-core==2.23.4
+    # via pydantic
 pyecharts==2.0.6
-    # via scrapeschema
+    # via scrapontology
 pygments==2.18.0
     # via furo
     # via sphinx
-pylint==3.2.7
+pylint==3.3.1
 pytest==8.0.0
     # via pytest-mock
 pytest-mock==3.14.0
 python-dotenv==1.0.1
-    # via scrapeschema
+    # via scrapontology
+pyyaml==6.0.2
+    # via langchain-core
 requests==2.32.3
-    # via scrapeschema
+    # via langsmith
+    # via scrapontology
     # via sphinx
 simplejson==3.19.3
     # via pyecharts
+sniffio==1.3.1
+    # via anyio
+    # via httpx
 snowballstemmer==2.2.0
     # via sphinx
 soupsieve==2.6
     # via beautifulsoup4
 sphinx==6.0.0
     # via furo
-    # via scrapeschema
+    # via scrapontology
     # via sphinx-basic-ng
 sphinx-basic-ng==1.0.0b2
     # via furo
@@ -99,18 +143,24 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
+tenacity==8.5.0
+    # via langchain-core
 tomli==2.0.1
     # via pylint
     # via pytest
 tomlkit==0.13.2
     # via pylint
 typing-extensions==4.12.2
+    # via anyio
     # via astroid
+    # via langchain-core
+    # via pydantic
+    # via pydantic-core
     # via pylint
 urllib3==2.2.2
     # via requests
-    # via scrapeschema
+    # via scrapontology
 wcwidth==0.2.13
     # via prettytable
-zipp==3.20.1
+zipp==3.20.2
     # via importlib-metadata

@@ -1,6 +1,6 @@
-from scrapeschema import FileExtractor, PDFParser
-from scrapeschema.renderers import PyechartsRenderer
-from scrapeschema.llm_client import LLMClient
+from scrapontology import FileExtractor, PDFParser
+from scrapontology.renderers import PyechartsRenderer
+from scrapontology.llm_client import LLMClient
 
 import os
 from dotenv import load_dotenv
