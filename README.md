@@ -210,3 +210,19 @@ print(entities)
   }
 }
 ```
+
+## 🤝 Contributing
+
+Feel free to contribute and join our Discord server to discuss with us improvements and give us suggestions!
+
+Please see the [contributing guidelines](https://github.com/VinciGit00/Scrapegraph-ai/blob/main/CONTRIBUTING.md).
+
+[![My Skills](https://skillicons.dev/icons?i=discord)](https://discord.gg/uJN7TYcpNa)
+[![My Skills](https://skillicons.dev/icons?i=linkedin)](https://www.linkedin.com/company/scrapegraphai/)
+[![My Skills](https://skillicons.dev/icons?i=twitter)](https://twitter.com/scrapegraphai)
+
+***
+## Created by Scrapegraphai
+
+![](docs/assets/scrapegraphai_logo.svg)
+***
