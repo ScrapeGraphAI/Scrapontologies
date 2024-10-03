@@ -250,6 +250,9 @@ class FileExtractor(Extractor):
         new_relations = self.parser.extract_relations()
 
         return self.get_json_schema()
+    
+    def extract_graph(self):
+        return self.parser.extract_graph()
 
 
         ###########################################################################################

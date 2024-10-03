@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Literal
 from .base_parser import BaseParser
 from ..primitives import Entity, Relation
 import base64
@@ -13,6 +13,9 @@ import logging
 import re
 from ..llm_client import LLMClient
 from requests.exceptions import ReadTimeout
+from langgraph.graph import StateGraph, START, END
+from pydantic import BaseModel
+from typing import Optional, List
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -117,44 +120,6 @@ def save_image_to_temp(image: Image.Image) -> str:
         image.save(temp_file.name, 'JPEG')
         return temp_file.name
 
-def process_pdf(pdf_path: str) -> Optional[List[str]]:
-    """
-    Processes a PDF file and converts each page to a base64 encoded image.
-
-    Args:
-        pdf_path (str): The path to the PDF file.
-
-    Returns:
-        List[str] or None: A list of base64 encoded images if successful, None otherwise.
-    """
-    if not os.path.exists(pdf_path):
-        raise FileNotFoundError(f"PDF file not found: {pdf_path}")
-    
-    # Load PDF as images
-    images = load_pdf_as_images(pdf_path)
-    if not images:
-        return None
-
-    base64_images = []
-
-    for page_num, image in enumerate(images, start=1):
-        temp_image_path = None
-        try:
-            # Save image to temporary file
-            temp_image_path = save_image_to_temp(image)
-            
-            # Convert image to base64
-            base64_image = encode_image(temp_image_path)
-            base64_images.append(base64_image)
-
-        except Exception as e:
-            logging.error(f"Error processing page {page_num}: {e}")
-        finally:
-            # Ensure temp file is deleted even in case of an error
-            if temp_image_path and os.path.exists(temp_image_path):
-                os.unlink(temp_image_path)
-
-    return base64_images
 
 class PDFParser(BaseParser):
     """
@@ -174,42 +139,93 @@ class PDFParser(BaseParser):
 
         super().__init__(llm_client)
 
-    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"PDF file not found: {file_path}")
-        
-        if prompt:
-            entities_json_schema = self.entities_json_schema(file_path, prompt)
-        else:
-            entities_json_schema = self.entities_json_schema(file_path)
-        
-        # pass to the llm the entities json schema:
-        prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
+        class State_Entities(BaseModel):
+            file_path: Optional[str] = None
+            user_prompt_for_filter: Optional[str] = None
+            entities_code: Optional[str] = None
+            entity_class: Optional[str] = None 
+            temp_entities: Optional[List[Entity]] = None
+            entities: Optional[List[Entity]] = None
+            base64_images: Optional[List[str]] = None
+            page_answers: Optional[List[str]] = None
+            entities_json_schema: Optional[Dict[str, Any]] = None
+
+        # initialize the state with the avaible field at the start, the entity class definition
+        self.state_entities =  State_Entities()
+        self.state_entities.entity_class = inspect.getsource(Entity)
+
+        #nodes for the entities graph
+        builder_for_entities = StateGraph(State_Entities)
+        builder_for_entities.add_node("process_pdf", self._process_pdf)
+        builder_for_entities.add_node("generate_json_schemas", self._generate_json_schemas)
+        builder_for_entities.add_node("merge_json_schemas", self._merge_json_schemas)
+        builder_for_entities.add_node("generate_entities_code", self._generate_entities_code)
+        builder_for_entities.add_node("execute_entities_code", self._execute_entities_code)
+        builder_for_entities.add_node("assign_entities", self.update_entities)
+
+        #edges for the entities graph
+        builder_for_entities.add_edge(START, "process_pdf")
+        builder_for_entities.add_edge("process_pdf", "generate_json_schemas")
+        builder_for_entities.add_edge("generate_json_schemas", "merge_json_schemas")
+        builder_for_entities.add_edge("merge_json_schemas", "generate_entities_code")
+        builder_for_entities.add_edge("generate_entities_code","execute_entities_code")
+        builder_for_entities.add_edge("execute_entities_code", "assign_entities")
+        builder_for_entities.add_edge("assign_entities", END)
+
+        self.graph_for_entities = builder_for_entities.compile()
+
+
+    def extract_graph(self):
+        return self.graph_for_entities
+    
+    def _generate_entities_code(self, *_) -> str:
+        prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(self.state_entities.entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
         entities_code = self.llm_client.get_response(prompt)
 
         # extract the python code from the entities_code remove the ```python and ```
         entities_code = entities_code.replace("```python", "").replace("```", "")
-        # execute the code and get the entities
+        self.state_entities.entities_code = entities_code
+        return self.state_entities
+    
+    def _execute_entities_code(self, *_):
         local_vars = {}
         max_retries = 3
         retry_count = 0
         while retry_count < max_retries:
             try:
-                exec(entities_code, globals(), local_vars)
+                exec(self.state_entities.entities_code, globals(), local_vars)
                 break  # If successful, exit the loop
             except Exception as e:
                 logging.error(f"Error executing entities code (attempt {retry_count + 1}): {e}")
                 if retry_count == max_retries - 1:
                     logging.error("Max retries reached. Unable to execute entities code.")
                     break
-                fix_code_prompt = FIX_CODE_PROMPT.format(code=entities_code, error=str(e))
+                fix_code_prompt = FIX_CODE_PROMPT.format(code=self.state_entities.entities_code, error=str(e))
                 fixed_code = self.llm_client.get_response(fix_code_prompt)
-                entities_code = fixed_code  # Update entities_code with the fixed version
+                fixed_code = fixed_code.replace("```python", "").replace("```", "")
+                self.state_entities.entities_code = fixed_code  # Update entities_code with the fixed version
                 retry_count += 1
         
         new_entities = local_vars.get('entities', [])
+        self.state_entities.temp_entities = new_entities
         
-        return self.update_entities(new_entities)
+        return self.state_entities
+
+    
+    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
+        self.state_entities.file_path = file_path
+
+        if prompt:
+            self.state_entities.user_prompt_for_filter = prompt
+
+
+        self.graph_for_entities.invoke(self.state_entities)
+
+        return self.state_entities.entities
+    
 
 
     def _extract_json_content(self, input_string: str) -> str:
@@ -226,12 +242,12 @@ class PDFParser(BaseParser):
             return match.group(1).strip()
         return ""
 
-    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
+    def update_entities(self, *_):
         existing_entities = self._entities
 
         prompt = UPDATE_ENTITIES_PROMPT.format(
             existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
-            new_entities=json.dumps([e.__dict__ for e in new_entities], indent=2)
+            new_entities=json.dumps([e.__dict__ for e in self.state_entities.temp_entities], indent=2)
         )
 
         response = self.llm_client.get_response(prompt)
@@ -242,6 +258,7 @@ class PDFParser(BaseParser):
             updated_entities = [Entity(**entity_data) for entity_data in updated_entities_data]
             
             # Update the parser's entities
+            self.state_entities.entities = updated_entities
             self._entities = updated_entities
             
             # print the updated entities
@@ -249,11 +266,11 @@ class PDFParser(BaseParser):
             for entity in updated_entities:
                 logging.info(entity.__dict__)
             logging.info(f"Entities updated. New count: {len(updated_entities)}")
-            return updated_entities
+            return self.state_entities
         except json.JSONDecodeError as e:
             logging.error(f"JSONDecodeError: {e}")
             logging.error("Error: Unable to parse the LLM response.")
-            return existing_entities
+            return self.state_entities
 
     def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
         """
@@ -308,7 +325,7 @@ class PDFParser(BaseParser):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
         entities = []
-        base64_images = process_pdf(file_path)
+        base64_images = self._process_pdf(file_path)
 
         if base64_images:
             page_answers = self._generate_digraph(base64_images)
@@ -319,35 +336,6 @@ class PDFParser(BaseParser):
             logging.info("digraph_code_execution----------------------------------")
             exec(digraph_code[9:-3])
 
-    def entities_json_schema(self, file_path: str, prompt: Optional[str] = None) -> Dict[str, Any]:
-        """
-        Generates a JSON schema of entities from a PDF file.
-
-        Args:
-            file_path (str): The path to the PDF file.
-
-        Returns:
-            Dict[str, Any]: The JSON schema of entities.
-        """
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"PDF file not found: {file_path}")
-        
-        base64_images = process_pdf(file_path)
-
-        if base64_images:
-            page_answers = self._generate_json_schema(base64_images, prompt)
-            json_schema = self._merge_json_schemas(page_answers)
-            json_schema = self._extract_json_content(json_schema)
-
-            logging.info("\n PDF JSON Schema:")
-            logging.info(json_schema)
-            # json schema is a valid json schema but its a string convert it to a python dict
-            entities_json_schema = json.loads(json_schema)
-            
-            # Assign the generated schema to self._json_schema
-            self._json_schema = entities_json_schema
-            
-            return entities_json_schema
 
     def _generate_digraph(self, base64_images: List[str]) -> List[str]:
         page_answers = []
@@ -377,12 +365,12 @@ class PDFParser(BaseParser):
         digraph_code = self.llm_client.get_response(digraph_prompt)
         return digraph_code
 
-    def _generate_json_schema(self, base64_images: List[str], prompt: Optional[str] = None) -> List[str]:
+    def _generate_json_schemas(self,*_):
         page_answers = []
-        for page_num, base64_image in enumerate(base64_images, start=1):
-            if prompt:
+        for page_num, base64_image in enumerate(self.state_entities.base64_images, start=1):
+            if self.state_entities.user_prompt_for_filter:
                 customized_prompt = f"{JSON_SCHEMA_PROMPT} extract only what is required from the following prompt:\
-                      {prompt} (Page {page_num})"
+                      {self.state_entities.user_prompt_for_filter} (Page {page_num})"
             else:
                 customized_prompt = f"{JSON_SCHEMA_PROMPT} (Page {page_num})"
             
@@ -396,13 +384,61 @@ class PDFParser(BaseParser):
             page_answers.append(f"Page {page_num}: {answer}")
             logging.info(f"Processed page {page_num}")
 
-        return page_answers
+        self.state_entities.page_answers = page_answers
+        return self.state_entities
 
-    def _merge_json_schemas(self, page_answers: List[str]) -> str:
-        digraph_prompt = "Generate a unique json schema starting from the following \
-                          \n\n" + "\n\n".join(page_answers) + "\n\n \
+    def _merge_json_schemas(self,*_):
+        json_schema_prompt = "Generate a unique json schema starting from the following \
+                          \n\n" + "\n\n".join(self.state_entities.page_answers) + "\n\n \
                           Remember to provide only the json schema without any comments, wrapped in backticks (`) like ```json ... ``` and nothing else."
 
-        digraph_code = self.llm_client.get_response(digraph_prompt)
-        return digraph_code
+        json_schema_answer = self.llm_client.get_response(json_schema_prompt)
+        json_schema = self._extract_json_content(json_schema_answer)
+        logging.info("\n PDF JSON Schema:")
+        logging.info(json_schema)
+        # json schema is a valid json schema but its a string convert it to a python dict
+        entities_json_schema = json.loads(json_schema) 
+        # Assign the generated schema to self._json_schema
+        self.state_entities.entities_json_schema = entities_json_schema
+        return self.state_entities
+    
+    def _process_pdf(self, *_):  #Optional[List[str]]:
+        """
+        Processes a PDF file and converts each page to a base64 encoded image.
+
+        Args:
+            pdf_path (str): The path to the PDF file.
+
+        Returns:
+            List[str] or None: A list of base64 encoded images if successful, None otherwise.
+        """
+        if not os.path.exists(self.state_entities.file_path):
+            raise FileNotFoundError(f"PDF file not found: {self.state_entities.file_path}")
+        
+        # Load PDF as images
+        images = load_pdf_as_images(self.state_entities.file_path)
+        if not images:
+            return None
+
+        base64_images = []
+
+        for page_num, image in enumerate(images, start=1):
+            temp_image_path = None
+            try:
+                # Save image to temporary file
+                temp_image_path = save_image_to_temp(image)
+                
+                # Convert image to base64
+                base64_image = encode_image(temp_image_path)
+                base64_images.append(base64_image)
+
+            except Exception as e:
+                logging.error(f"Error processing page {page_num}: {e}")
+            finally:
+                # Ensure temp file is deleted even in case of an error
+                if temp_image_path and os.path.exists(temp_image_path):
+                    os.unlink(temp_image_path)
+
+        self.state_entities.base64_images = base64_images
+        return self.state_entities
 

@@ -3,9 +3,9 @@ name = "scrapontology"
 version = "0.0.1"
 description = "Library for extracting schemas and building ontologies from documents using LLM"
 authors = [
+    { name = "Lorenzo Padoan", email = "lorenzo.padoan977@gmail.com" },
     { name = "Marco Vinciguerra", email = "mvincig11@gmail.com" },
-    { name = "Marco Perini", email = "perinim.98@gmail.com" },
-    { name = "Lorenzo Padoan", email = "lorenzo.padoan977@gmail.com" }
+    { name = "Marco Perini", email = "perinim.98@gmail.com" }
 ]
 
 dependencies = [
