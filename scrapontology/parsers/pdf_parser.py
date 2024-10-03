@@ -174,9 +174,45 @@ class PDFParser(BaseParser):
 
         self.graph_for_entities = builder_for_entities.compile()
 
+        class State_Relations(BaseModel):
+            entities: Optional[List[Entity]] = None
+            user_prompt_for_filter: Optional[str] = None
+            relations_code: Optional[str] = None
+            relation_class: Optional[str] = None
+            relations: Optional[List[Relation]] = None
 
-    def extract_graph(self):
-        return self.graph_for_entities
+        self.state_relations = State_Relations()
+        self.state_relations.relation_class = inspect.getsource(Relation)
+
+        builder_for_relations = StateGraph(State_Relations)
+        builder_for_relations.add_node("extract_relations", self._extract_relations_code)
+        builder_for_relations.add_node("execute_relations_code", self._execute_relations_code)
+        builder_for_relations.add_edge(START, "extract_relations")
+        builder_for_relations.add_edge("extract_relations", "execute_relations_code")
+        builder_for_relations.add_edge("execute_relations_code", END)
+
+        self.graph_for_relations = builder_for_relations.compile()
+
+        class State_Entities_Json_Schema(BaseModel):
+            file_path: Optional[str] = None
+            base64_images: Optional[List[str]] = None
+            page_answers: Optional[List[str]] = None
+            entities_json_schema: Optional[Dict[str, Any]] = None
+
+        self.state_entities_json_schema = State_Entities_Json_Schema()
+    
+
+        builder_for_entities_json_schema = StateGraph(State_Entities_Json_Schema)
+        builder_for_entities_json_schema.add_node("process_pdf", self._process_pdf)
+        builder_for_entities_json_schema.add_node("generate_json_schemas", self._generate_json_schemas)
+        builder_for_entities_json_schema.add_node("merge_json_schemas", self._merge_json_schemas)
+        builder_for_entities_json_schema.add_edge(START, "process_pdf")
+        builder_for_entities_json_schema.add_edge("process_pdf", "generate_json_schemas")
+        builder_for_entities_json_schema.add_edge("generate_json_schemas", "merge_json_schemas")
+        builder_for_entities_json_schema.add_edge("merge_json_schemas", END)
+
+        self.graph_for_entities_json_schema = builder_for_entities_json_schema.compile()
+
     
     def _generate_entities_code(self, *_) -> str:
         prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(self.state_entities.entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
@@ -225,8 +261,8 @@ class PDFParser(BaseParser):
         self.graph_for_entities.invoke(self.state_entities)
 
         return self.state_entities.entities
-    
 
+    
 
     def _extract_json_content(self, input_string: str) -> str:
     # Use regex to match content between ```json and ```
@@ -283,36 +319,48 @@ class PDFParser(BaseParser):
             List[Relation]: A list of extracted relations.
         """
         if file_path is not None and not os.path.exists(file_path):
+            logging.error(f"PDF file not found: {file_path}")
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
         if not self._entities or len(self._entities) == 0:
-            self.extract_entities(file_path, prompt)
+            logging.error("Entities not found. Please extract entities first.")
+            raise ValueError("Entities not found. Please extract entities first.")
 
+        self.graph_for_relations.invoke(self.state_relations)
+
+        return self.state_relations.relations
+
+
+    def _extract_relations_code(self, *_):
         relation_class_str = inspect.getsource(Relation)
         relations_prompt = RELATIONS_PROMPT.format(
             entities=json.dumps([e.__dict__ for e in self._entities], indent=2),
-            relation_class=relation_class_str
+            relation_class=self.state_relations.relation_class
         )
-        if prompt:
+        if self.state_relations.user_prompt_for_filter:
             #append to the relations_prompt the prompt
-            relations_prompt += f"\n\n Extract only the relations that are required from the following user prompt:\n\n{prompt}"
+            relations_prompt += f"\n\n Extract only the relations that are required from the following user prompt:\n\n{self.state_relations.user_prompt_for_filter}"
 
 
-        relations_answer_code = self.llm_client.get_response(relations_prompt)
-        relations_answer_code = self._extract_python_content(relations_answer_code)
+        relations_code_answer = self.llm_client.get_response(relations_prompt)
+        relations_code = self._extract_python_content(relations_code_answer)
+        self.state_relations.relations_code = relations_code
+        return self.state_relations
 
+    def _execute_relations_code(self, *_):
         local_vars = {}
         try:
-            exec(relations_answer_code, globals(), local_vars)
+            exec(self.state_relations.relations_code, globals(), local_vars)
         except Exception as e:
             logging.error(f"Error executing relations code: {e}")
             raise ValueError(f"The language model generated invalid code: {e}") from e
 
         relations_answer = local_vars.get('relations', [])
         self._relations = relations_answer
-        logging.info(f"Extracted relations: {relations_answer_code}")
+        self.state_relations.relations = relations_answer
+        logging.info(f"Extracted relations: {self.state_relations.relations}")
 
-        return self._relations
+        return self.state_relations
   
     def plot_entities_schema(self, file_path: str) -> None:
         """
@@ -336,34 +384,6 @@ class PDFParser(BaseParser):
             logging.info("digraph_code_execution----------------------------------")
             exec(digraph_code[9:-3])
 
-
-    def _generate_digraph(self, base64_images: List[str]) -> List[str]:
-        page_answers = []
-        for page_num, base64_image in enumerate(base64_images, start=1):
-            prompt = f"You are an AI specialized in creating python code for generating digraph graphviz, you have to create python code for creating a digraph with the relative entities with the relative attributes \
-                       (name_attribute : type) (i.e type is int,float,list[dict],dict,string,etc...) from a PDF screenshot.\
-                        in the digraph you have to represent the entities with their attributes names and types, \
-                        NOT THE VALUES OF THE ATTRIBUTES, IT'S EXTREMELY IMPORTANT. \
-                        you must provide only the code to generate the digraph, without any comments before or after the code.\
-                        Remember you don't have to insert the values of the attribute but only (name)\
-                        Remember the generated digraph must be a tree, following the hierarchy of the entities in the PDF\
-                        Remember to the deduplicate similar entities and to the remove the duplicate edges, you have to provide the best digraph\
-                        that represent the PDF document because the partial digraphs are generated from the same document but from different parts of the PDF\
-                        Remeber to follow a structure like this one: \n\n{DIGRAPH_EXAMPLE_PROMPT}\n\nHere a page to from a PDF screenshot (Page {page_num})"
-
-            image_data = f"data:image/jpeg;base64,{base64_image}"
-            answer = self.llm_client.get_response(prompt, image_url=image_data)
-            page_answers.append(f"Page {page_num}: {answer}")
-            logging.info(f"Processed page {page_num}")
-
-        return page_answers
-
-    def _merge_digraphs_for_plot(self, page_answers: List[str]) -> str:
-        digraph_prompt = "Merge the partial digraphs that I provide to you merging together all the detected entities, \n\n" + "\n\n".join(page_answers) + \
-            "\nYour answer digraph must be a tree and must contain only the code for a valid graphviz graph"
-        
-        digraph_code = self.llm_client.get_response(digraph_prompt)
-        return digraph_code
 
     def _generate_json_schemas(self,*_):
         page_answers = []
@@ -398,8 +418,9 @@ class PDFParser(BaseParser):
         logging.info(json_schema)
         # json schema is a valid json schema but its a string convert it to a python dict
         entities_json_schema = json.loads(json_schema) 
-        # Assign the generated schema to self._json_schema
+
         self.state_entities.entities_json_schema = entities_json_schema
+        self._json_schema = entities_json_schema
         return self.state_entities
     
     def _process_pdf(self, *_):  #Optional[List[str]]:
@@ -412,11 +433,22 @@ class PDFParser(BaseParser):
         Returns:
             List[str] or None: A list of base64 encoded images if successful, None otherwise.
         """
-        if not os.path.exists(self.state_entities.file_path):
-            raise FileNotFoundError(f"PDF file not found: {self.state_entities.file_path}")
+        if (self.state_entities.file_path is None and 
+            self.state_entities_json_schema.file_path is None):
+            raise FileNotFoundError(f"PDF file not found")
+        elif self.state_entities.file_path is None:
+            # check if the file exists
+            if not os.path.exists(self.state_entities_json_schema.file_path):
+                raise FileNotFoundError(f"PDF file not found: {self.state_entities_json_schema.file_path}")
+            file_path = self.state_entities_json_schema.file_path
+        elif self.state_entities_json_schema.file_path is None:
+            # check if the file exists
+            if not os.path.exists(self.state_entities.file_path):
+                raise FileNotFoundError(f"PDF file not found: {self.state_entities.file_path}")
+            file_path = self.state_entities.file_path
         
         # Load PDF as images
-        images = load_pdf_as_images(self.state_entities.file_path)
+        images = load_pdf_as_images(file_path)
         if not images:
             return None
 
@@ -441,4 +473,34 @@ class PDFParser(BaseParser):
 
         self.state_entities.base64_images = base64_images
         return self.state_entities
+    
+    def get_entities_graph(self):
+        return self.graph_for_entities
+    
+    def get_relations_graph(self):
+        return self.graph_for_relations
+    
+    def generate_json_schema(self, file_path: str) -> Dict[str, Any]:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(f"PDF file not found: {file_path}")
+        
+        self.state_entities_json_schema.file_path = file_path  
+        self.graph_for_entities_json_schema.invoke(self.state_entities_json_schema)
+
+        logging.info(f"Entities JSON Schema: {self._json_schema}")
+        return self._json_schema
+
+    def get_json_schema_graph(self):
+        return self.graph_for_entities_json_schema
+
+    def get_json_schema(self):
+        return self._json_schema
+    
+    def get_entities(self):
+        return self._entities
+    
+    def get_relations(self):
+        return self._relations
+    
+
 

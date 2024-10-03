@@ -6,10 +6,10 @@ from ..llm_client import LLMClient
 class BaseParser(ABC):
     def __init__(self, llm_client: LLMClient):
         """
-        Initializes the PDFParser with an API key.
+        Initializes the BaseParser with an LLMClient.
 
         Args:
-            api_key (str): The API key for authentication.
+            llm_client (LLMClient): The LLM client for inference.
         """
         self.llm_client = llm_client
         self._headers = {
@@ -19,6 +19,101 @@ class BaseParser(ABC):
         self._json_schema = {}
         self._entities = []
         self._relations = []
+
+    @abstractmethod
+    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
+        """
+        Extracts entities from the given file.
+
+        Args:
+            file_path (str): The path to the file.
+            prompt (Optional[str]): An optional prompt to guide the extraction.
+
+        Returns:
+            List[Entity]: A list of extracted entities.
+        """
+        pass
+
+    @abstractmethod
+    def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
+        """
+        Extracts relations from the given file.
+
+        Args:
+            file_path (Optional[str]): The path to the file.
+            prompt (Optional[str]): An optional prompt to guide the extraction.
+
+        Returns:
+            List[Relation]: A list of extracted relations.
+        """
+        pass
+
+    @abstractmethod
+    def generate_json_schema(self, file_path: str) -> Dict[str, Any]:
+        """
+        Generates a JSON schema for the entities based on the given file.
+
+        Args:
+            file_path (str): The path to the file.
+
+        Returns:
+            Dict[str, Any]: The generated JSON schema.
+        """
+        pass
+
+    @abstractmethod
+    def get_entities(self) -> List[Entity]:
+        """
+        Retrieves the list of entities.
+
+        Returns:
+            List[Entity]: The current list of entities.
+        """
+        pass
+
+
+    @abstractmethod
+    def get_relations(self) -> List[Relation]:
+        """
+        Retrieves the list of relations.
+
+        Returns:
+            List[Relation]: The current list of relations.
+        """
+        pass
+
+
+    @abstractmethod
+    def get_json_schema(self) -> Dict[str, Any]:
+        """
+        Retrieves the JSON schema.
+
+        Returns:
+            Dict[str, Any]: The current JSON schema.
+        """
+        pass
+
+
+    @abstractmethod
+    def get_entities_graph(self):
+        """
+        Retrieves the state graph for entities extraction.
+
+        Returns:
+            Any: The entities state graph.
+        """
+        pass
+
+    @abstractmethod
+    def get_relations_graph(self):
+        """
+        Retrieves the state graph for relations extraction.
+
+        Returns:
+            Any: The relations state graph.
+        """
+        pass
+
 
 
 

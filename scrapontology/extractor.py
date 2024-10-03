@@ -21,11 +21,7 @@ class Extractor(ABC):
         pass
     
     @abstractmethod
-    def entities_json_schema(self) -> Dict[str, Any]:
-        pass
-
-    @abstractmethod
-    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
+    def generate_entities_json_schema(self) -> Dict[str, Any]:
         pass
 
     @abstractmethod
@@ -37,32 +33,75 @@ class Extractor(ABC):
         pass
 
     @abstractmethod
-    def set_entities(self, entities: List[Entity]) -> None:
+    def get_entities(self) -> List[Entity]:
         pass
 
     @abstractmethod
-    def set_relations(self, relations: List[Relation]) -> None:
+    def get_relations(self) -> List[Relation]:
         pass
 
     @abstractmethod
-    def set_json_schema(self, schema: Dict[str, Any]) -> None:
+    def get_json_schema(self) -> Dict[str, Any]:
+        pass
+
+    @abstractmethod
+    def get_entities_graph(self):
+        pass
+
+    @abstractmethod
+    def get_relations_graph(self):
+        pass
+
+    @abstractmethod
+    def get_json_schema(self):
         pass
 
 class FileExtractor(Extractor):
     def __init__(self, file_path: str, parser: BaseParser):
+        """
+        Initialize the FileExtractor.
+
+        Args:
+            file_path (str): The path to the file to be processed.
+            parser (BaseParser): The parser to be used for extraction.
+        """
         self.file_path = file_path
         self.parser = parser
 
     def extract_entities(self, prompt: Optional[str] = None) -> List[Entity]:
+        """
+        Extract entities from the file.
+
+        Args:
+            prompt (Optional[str]): An optional prompt to guide the extraction.
+
+        Returns:
+            List[Entity]: A list of extracted entities.
+        """
         new_entities = self.parser.extract_entities(self.file_path, prompt)
         return new_entities
 
     def extract_relations(self, prompt: Optional[str] = None) -> List[Relation]:
+        """
+        Extract relations from the file.
+
+        Args:
+            prompt (Optional[str]): An optional prompt to guide the extraction.
+
+        Returns:
+            List[Relation]: A list of extracted relations.
+        """
         return self.parser.extract_relations(self.file_path, prompt)
     
+    def generate_entities_json_schema(self) -> Dict[str, Any]:
+        """
+        Generate a JSON schema for the entities.
 
-    def entities_json_schema(self) -> Dict[str, Any]:
-        return self.parser.entities_json_schema(self.file_path)
+        Returns:
+            Dict[str, Any]: The generated JSON schema.
+        """
+        self.parser.generate_json_schema(self.file_path)
+        return self.parser.get_json_schema()
 
     def delete_entity_or_relation(self, item_description: str) -> None:
         entities_ids = [e.id for e in self.parser.get_entities()]
@@ -109,63 +148,7 @@ class FileExtractor(Extractor):
         self.parser.set_relations(relations)
         logger.info(f"Relation '{name}' between '{source}' and '{target}' has been deleted.")
 
-    def update_entities(self, new_entities: List[Entity]) -> List[Entity]:
-        """
-        Update the existing entities with new entities, integrating and deduplicating as necessary.
-        
-        :param new_entities: List of new entities to be integrated
-        :return: Updated list of entities
-        """
-        existing_entities = self.parser.get_entities()
-        
-        # Prepare the prompt for the LLM
-        prompt = UPDATE_ENTITIES_PROMPT.format(
-            existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
-            new_entities=json.dumps([e.__dict__ for e in new_entities], indent=2)
-        )
-
-        # Get the LLM response
-        response = self._get_llm_response(prompt)
-        
-        try:
-            updated_entities_data = json.loads(response)
-            updated_entities = [Entity(**entity_data) for entity_data in updated_entities_data]
-            
-            # Update the parser's entities
-            self.parser.set_entities(updated_entities)
-            
-            logger.info(f"Entities updated. New count: {len(updated_entities)}")
-            return updated_entities
-        except json.JSONDecodeError:
-            logger.error("Error: Unable to parse the LLM response.")
-            return existing_entities
-
-    def set_json_schema(self, schema: Dict[str, Any]) -> None:
-        """
-        Set the JSON schema for the parser.
-
-        Args:
-            schema (Dict[str, Any]): The JSON schema to set.
-        """
-        self.parser.set_json_schema(schema)
-
-    def set_entities(self, entities: List[Entity]) -> None:
-        """
-        Set the entities for the parser.
-
-        Args:
-            entities (List[Entity]): The list of entities to set.
-        """
-        self.parser.set_entities(entities)
-
-    def set_relations(self, relations: List[Relation]) -> None:
-        """
-        Set the relations for the parser.
-
-        Args:
-            relations (List[Relation]): The list of relations to set.
-        """
-        self.parser.set_relations(relations)
+  
     
     def get_entities(self) -> List[Entity]:
         """
@@ -185,14 +168,6 @@ class FileExtractor(Extractor):
         """
         return self.parser.get_relations()
 
-    def get_json_schema(self) -> Dict[str, Any]:
-        """
-        Get the JSON schema from the parser.
-
-        Returns:
-            Dict[str, Any]: The JSON schema.
-        """
-        return self.parser.get_json_schema()
         
     def merge_schemas(self, other_schema: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -250,10 +225,32 @@ class FileExtractor(Extractor):
         new_relations = self.parser.extract_relations()
 
         return self.get_json_schema()
-    
-    def extract_graph(self):
-        return self.parser.extract_graph()
 
 
-        ###########################################################################################
-       
+    def get_entities_graph(self):
+        """
+        Retrieves the state graph for entities extraction.
+
+        Returns:
+            Any: The entities state graph from the parser.
+        """
+        return self.parser.get_entities_graph()
+
+    def get_relations_graph(self):
+        """
+        Retrieves the state graph for relations extraction.
+
+        Returns:
+            Any: The relations state graph from the parser.
+        """
+        return self.parser.get_relations_graph()
+
+    def get_json_schema(self):
+        """
+        Retrieves the JSON schema.
+
+        Returns:
+            Dict[str, Any]: The current JSON schema from the parser.
+        """
+        return self.parser.get_json_schema()
+
