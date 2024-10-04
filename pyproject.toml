@@ -17,6 +17,7 @@ dependencies = [
     "requests==2.32.3",
     "urllib3==2.2.2",
     "langgraph==0.2.31",
+    "psycopg2==2.9.9"
 ]
 
 license = "MIT"

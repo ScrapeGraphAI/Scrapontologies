@@ -55,7 +55,7 @@ class Extractor(ABC):
     @abstractmethod
     def get_json_schema(self):
         pass
-
+    
 class FileExtractor(Extractor):
     def __init__(self, file_path: str, parser: BaseParser):
         """
