@@ -3,6 +3,9 @@ from abc import ABC, abstractmethod
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import logging
+from pydantic_core import CoreSchema, core_schema
+from typing import Any, Callable
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +27,14 @@ class PostgresDBClient(DBClient):
         self.conn = None
         self.cursor = None
         self.host = host or os.getenv('POSTGRES_HOST', 'localhost')
-        self.port = port or os.getenv('POSTGRES_PORT', '5432')
+        self.port = port or os.getenv('POSTGRE1S_PORT', '5432')
         self.database = database or os.getenv('POSTGRES_DB', 'scrapontology_test')
         self.user = user or os.getenv('POSTGRES_USER', 'lurens')
         self.password = password or os.getenv('POSTGRES_PASSWORD', 'cicciopasticco')
+
+        @classmethod
+        def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: Callable) -> CoreSchema:
+            return core_schema.any_schema()
 
     def connect(self):
         try:
@@ -57,7 +64,8 @@ class PostgresDBClient(DBClient):
         except (Exception, psycopg2.Error) as error:
             logger.error(f"Error executing query: {error}")
             self.conn.rollback()
-            return None
+            raise error  # Re-raise the exception to propagate it
+
 
 class Neo4jDBClient(DBClient):
     def __init__(self):

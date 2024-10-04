@@ -256,3 +256,12 @@ Code to fix:
 
 Please provide only the corrected Python code, nothing else before or after the code.
 """
+
+CREATE_TABLES_PROMPT = """
+How would you create table based on this json schema, remember to use the \
+normalization and all the 3 forms of normalizations, provide me only the postgres \
+sql code without any comment before and after the code.
+
+Json schema:
+{json_schema}
+"""
