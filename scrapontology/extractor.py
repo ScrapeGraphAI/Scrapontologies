@@ -3,11 +3,16 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Any, Optional
 from .primitives import Entity, Relation
 from .parsers.base_parser import BaseParser
-from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT, UPDATE_SCHEMA_PROMPT
+from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT, UPDATE_SCHEMA_PROMPT, CREATE_TABLES_PROMPT
 from .llm_client import LLMClient
 from .parsers.prompts import UPDATE_SCHEMA_PROMPT
+from .db_client import DBClient, PostgresDBClient
 import json
-
+from langgraph.graph import StateGraph, END, START
+from typing import TypedDict, Literal
+from scrapontology.db_client import PostgresDBClient
+from scrapontology.llm_client import LLMClient
+from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -56,17 +61,31 @@ class Extractor(ABC):
     def get_json_schema(self):
         pass
 
+    @abstractmethod
+    def get_db_client(self):
+        pass
+
+    @abstractmethod
+    def set_db_client(self, db_client: DBClient):
+        pass
+
+    @abstractmethod
+    def create_tables(self):
+        pass
+
 class FileExtractor(Extractor):
-    def __init__(self, file_path: str, parser: BaseParser):
+    def __init__(self, file_path: str, parser: BaseParser, db_client: Optional[DBClient] = None):
         """
         Initialize the FileExtractor.
 
         Args:
             file_path (str): The path to the file to be processed.
             parser (BaseParser): The parser to be used for extraction.
+            db_client (Optional[DBClient]): The database client. Defaults to None.
         """
         self.file_path = file_path
         self.parser = parser
+        self.db_client = db_client
 
     def extract_entities(self, prompt: Optional[str] = None) -> List[Entity]:
         """
@@ -253,4 +272,114 @@ class FileExtractor(Extractor):
             Dict[str, Any]: The current JSON schema from the parser.
         """
         return self.parser.get_json_schema()
+    
+    def get_db_client(self):
+        """
+        Retrieves the DB client.
 
+        Returns:
+            DBClient: The DB client.
+        """
+        if not isinstance(self.db_client, PostgresDBClient):
+            logger.error("DB client is not a relational database client.")
+            raise ValueError("DB client is not a relational database client.")\
+
+        return self.db_client
+
+    def set_db_client(self, db_client: DBClient):
+        """
+        Sets the DB client.
+
+        Args:
+            db_client (DBClient): The DB client.
+        """
+        if not isinstance(db_client, DBClient):
+            logger.error("DB client is not a valid DB client.")
+            raise ValueError("DB client is not a valid DB client.")
+
+        self.db_client = db_client
+
+    def create_tables(self):
+        """
+        Creates the tables in a relational database.
+        """
+        # checks if the db_client is a PostgresDBClient
+        if not isinstance(self.db_client, PostgresDBClient):
+            logger.error("DB client is not a relational database client.")
+            raise ValueError("DB client is not a relational database client.")
+        
+        # get the json schema
+        json_schema = self.get_json_schema()
+
+        self.db_client.connect()
+
+        class StateCreateTables(BaseModel):
+            json_schema: Optional[str] = None
+            sql_code: Optional[str] = None
+            retry: Optional[bool] = None
+            error: Optional[str] = None
+            retry_count: Optional[int] = 0
+
+        state_create_tables = StateCreateTables()
+        state_create_tables.json_schema = str(json_schema)
+
+        
+        def generate_sql_code(state: StateCreateTables, *_) -> StateCreateTables:
+            if state.sql_code is None:
+                create_tables_prompt = CREATE_TABLES_PROMPT.format(
+                    json_schema=json.dumps(state.json_schema, indent=2)
+                )
+                sql_code = self.parser.llm_client.get_response(create_tables_prompt)
+                sql_code = sql_code.replace("```sql", "").replace("```", "").strip()
+                state.sql_code = sql_code
+            else:
+                create_tables_prompt_fixed = CREATE_TABLES_PROMPT.format(
+                json_schema=json.dumps(state.json_schema, indent=2)
+                ) + "You generated previously the following erroneous code: " + state.sql_code + "With the following error: " + state.error + " Please fix it, if the relation already exists in the database please just ignore it and do not create it again."
+
+                state.retry_count += 1
+                sql_code = self.parser.llm_client.get_response(create_tables_prompt_fixed)
+                sql_code = sql_code.replace("```sql", "").replace("```", "").strip()
+                state.sql_code = sql_code
+            return state
+
+        def execute_sql_code(state: StateCreateTables, *_) -> Literal["success", "failure"]:
+            try:
+                self.db_client.execute_query(state.sql_code)
+                state.retry = False
+                return state
+            except Exception as e:
+                print(f"Error executing SQL: {e}")
+                state.error = str(e)
+                state.retry = True
+                return state
+        
+        def retry_or_not(state: StateCreateTables, *_):
+            if state.retry and state.retry_count < 2:
+                return "generate_sql_code"
+            else:   
+                return END
+
+        # Build the graph
+        workflow = StateGraph(StateCreateTables)
+
+        # Add nodes
+        workflow.add_node("generate_sql_code", generate_sql_code)
+        workflow.add_node("execute_sql_code", execute_sql_code)
+
+        # Add edges
+        workflow.add_edge(START, "generate_sql_code")
+        workflow.add_edge("generate_sql_code", "execute_sql_code")
+        workflow.add_conditional_edges(
+            "execute_sql_code",
+            retry_or_not
+        )
+        workflow.add_edge("execute_sql_code", END)
+
+        # Compile the graph
+        graph = workflow.compile()
+
+        # Execute the graph
+        graph.invoke(state_create_tables)
+        self.db_client.disconnect()
+        logger.info("Tables created successfully.")

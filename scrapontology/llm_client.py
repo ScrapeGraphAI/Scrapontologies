@@ -1,8 +1,8 @@
 import requests
 import logging
 from typing import Dict, Any, Optional, List
-import json
-from requests.adapters import HTTPAdapter
+from typing import Any, Callable
+from pydantic_core import CoreSchema, core_schema
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,10 @@ class LLMClient:
         }
 
         self.session = requests.Session()
+
+        @classmethod
+        def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: Callable) -> CoreSchema:
+            return core_schema.any_schema()
 
     def get_api_key(self) -> str:
         return self._api_key

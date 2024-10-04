@@ -94,6 +94,8 @@ pluggy==1.5.0
     # via pytest
 prettytable==3.11.0
     # via pyecharts
+psycopg2==2.9.9
+    # via scrapontology
 pydantic==2.9.2
     # via langchain-core
     # via langsmith
