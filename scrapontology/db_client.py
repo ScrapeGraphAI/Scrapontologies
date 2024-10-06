@@ -5,7 +5,7 @@ from psycopg2.extras import RealDictCursor
 import logging
 from pydantic_core import CoreSchema, core_schema
 from typing import Any, Callable
-
+from neo4j import GraphDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -68,28 +68,30 @@ class PostgresDBClient(DBClient):
 
 
 class Neo4jDBClient(DBClient):
-    def __init__(self):
-        # Placeholder for future implementation
-        pass
+    def __init__(self, uri=None, user=None, password=None):
+        self.driver = None
+        self.uri = uri or os.getenv('NEO4J_URI', 'bolt://localhost:7687')
+        self.user = user or os.getenv('NEO4J_USER', 'neo4j')
+        self.password = password or os.getenv('NEO4J_PASSWORD', 'password')
 
     def connect(self):
-        # Placeholder for future implementation
-        logger.info("Neo4j connection not yet implemented")
+        try:
+            self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
+            logger.info("Successfully connected to Neo4j database")
+        except Exception as error:
+            logger.error(f"Error while connecting to Neo4j: {error}")
+            raise error
 
     def disconnect(self):
-        # Placeholder for future implementation
-        pass
+        if self.driver:
+            self.driver.close()
+            logger.info("Neo4j connection is closed")
 
     def execute_query(self, query, params=None):
-        # Placeholder for future implementation
-        logger.info("Neo4j query execution not yet implemented")
-        return None
-
-# Factory function to get the appropriate DB client
-def get_db_client(db_type='postgres'):
-    if db_type.lower() == 'postgres':
-        return PostgresDBClient()
-    elif db_type.lower() == 'neo4j':
-        return Neo4jDBClient()
-    else:
-        raise ValueError(f"Unsupported database type: {db_type}")
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, params)
+                return [record.data() for record in result]
+        except Exception as error:
+            logger.error(f"Error executing Neo4j query: {error}")
+            raise error
