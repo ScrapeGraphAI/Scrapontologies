@@ -24,7 +24,7 @@ def main():
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities from the PDF
-    entities = pdf_extractor.extract_entities()
+    entities = pdf_extractor.extract_entities_schema()
     print("Extracted Entities:", entities)
 
     # Hardcoded schema to merge with

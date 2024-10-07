@@ -25,8 +25,8 @@ def main():
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities from the PDF
-    entities = pdf_extractor.extract_entities()
-    relations = pdf_extractor.extract_relations()
+    entities = pdf_extractor.extract_entities_schema()
+    relations = pdf_extractor.extract_relations_schema()
 
     # Initialize the PyechartsRenderer
     renderer = PyechartsRenderer(repulsion=2000, title="Entity-Relationship Graph")

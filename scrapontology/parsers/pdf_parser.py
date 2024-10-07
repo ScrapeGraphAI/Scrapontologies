@@ -1,11 +1,11 @@
-from typing import List, Dict, Any, Optional, Literal
+from typing import List, Dict, Any, Optional, Literal, Union
 from .base_parser import BaseParser
 from ..primitives import Entity, Relation
 import base64
 import os
 import tempfile
 import json
-from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT, EXTRACT_ENTITIES_CODE_PROMPT, FIX_CODE_PROMPT
+from .prompts import DIGRAPH_EXAMPLE_PROMPT, JSON_SCHEMA_PROMPT, RELATIONS_PROMPT, UPDATE_ENTITIES_PROMPT, extract_entities_schema_CODE_PROMPT, FIX_CODE_PROMPT
 from PIL import Image
 import inspect
 import subprocess
@@ -185,10 +185,10 @@ class PDFParser(BaseParser):
         self.state_relations.relation_class = inspect.getsource(Relation)
 
         builder_for_relations = StateGraph(State_Relations)
-        builder_for_relations.add_node("extract_relations", self._extract_relations_code)
+        builder_for_relations.add_node("extract_relations_schema", self._extract_relations_schema_code)
         builder_for_relations.add_node("execute_relations_code", self._execute_relations_code)
-        builder_for_relations.add_edge(START, "extract_relations")
-        builder_for_relations.add_edge("extract_relations", "execute_relations_code")
+        builder_for_relations.add_edge(START, "extract_relations_schema")
+        builder_for_relations.add_edge("extract_relations_schema", "execute_relations_code")
         builder_for_relations.add_edge("execute_relations_code", END)
 
         self.graph_for_relations = builder_for_relations.compile()
@@ -215,7 +215,7 @@ class PDFParser(BaseParser):
 
     
     def _generate_entities_code(self, *_) -> str:
-        prompt = EXTRACT_ENTITIES_CODE_PROMPT.format(json_schema=str(self.state_entities.entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
+        prompt = extract_entities_schema_CODE_PROMPT.format(json_schema=str(self.state_entities.entities_json_schema) , entity_class=str(inspect.getsource(Entity)))
         entities_code = self.llm_client.get_response(prompt)
 
         # extract the python code from the entities_code remove the ```python and ```
@@ -248,7 +248,7 @@ class PDFParser(BaseParser):
         return self.state_entities
 
     
-    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
+    def extract_entities_schema(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
@@ -279,7 +279,7 @@ class PDFParser(BaseParser):
         return ""
 
     def update_entities(self, *_):
-        existing_entities = self._entities
+        existing_entities = self._entities_schema
 
         prompt = UPDATE_ENTITIES_PROMPT.format(
             existing_entities=json.dumps([e.__dict__ for e in existing_entities], indent=2),
@@ -295,7 +295,7 @@ class PDFParser(BaseParser):
             
             # Update the parser's entities
             self.state_entities.entities = updated_entities
-            self._entities = updated_entities
+            self._entities_schema = updated_entities
             
             # print the updated entities
             logging.info("Updated entities:")
@@ -308,7 +308,7 @@ class PDFParser(BaseParser):
             logging.error("Error: Unable to parse the LLM response.")
             return self.state_entities
 
-    def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
+    def extract_relations_schema(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
         """
         Extracts relations from a PDF file.
 
@@ -322,7 +322,7 @@ class PDFParser(BaseParser):
             logging.error(f"PDF file not found: {file_path}")
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
-        if not self._entities or len(self._entities) == 0:
+        if not self._entities_schema or len(self._entities_schema) == 0:
             logging.error("Entities not found. Please extract entities first.")
             raise ValueError("Entities not found. Please extract entities first.")
 
@@ -331,10 +331,10 @@ class PDFParser(BaseParser):
         return self.state_relations.relations
 
 
-    def _extract_relations_code(self, *_):
+    def _extract_relations_schema_code(self, *_):
         relation_class_str = inspect.getsource(Relation)
         relations_prompt = RELATIONS_PROMPT.format(
-            entities=json.dumps([e.__dict__ for e in self._entities], indent=2),
+            entities=json.dumps([e.__dict__ for e in self._entities_schema], indent=2),
             relation_class=self.state_relations.relation_class
         )
         if self.state_relations.user_prompt_for_filter:
@@ -356,7 +356,7 @@ class PDFParser(BaseParser):
             raise ValueError(f"The language model generated invalid code: {e}") from e
 
         relations_answer = local_vars.get('relations', [])
-        self._relations = relations_answer
+        self._relations_schema = relations_answer
         self.state_relations.relations = relations_answer
         logging.info(f"Extracted relations: {self.state_relations.relations}")
 
@@ -474,10 +474,10 @@ class PDFParser(BaseParser):
         self.state_entities.base64_images = base64_images
         return self.state_entities
     
-    def get_entities_graph(self):
+    def get_entities_schema_graph(self):
         return self.graph_for_entities
     
-    def get_relations_graph(self):
+    def get_relations_schema_graph(self):
         return self.graph_for_relations
     
     def generate_json_schema(self, file_path: str) -> Dict[str, Any]:
@@ -496,11 +496,11 @@ class PDFParser(BaseParser):
     def get_json_schema(self):
         return self._json_schema
     
-    def get_entities(self):
-        return self._entities
+    def get_entities_schema(self):
+        return self._entities_schema
     
-    def get_relations(self):
-        return self._relations
-    
+    def get_relations_schema(self):
+        return self._relations_schema
 
-
+    def extract_entities_from_file(self, file_path: Union[str, List[str]]):
+        pass
