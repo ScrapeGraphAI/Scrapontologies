@@ -28,11 +28,6 @@ class LLMClient:
             "Authorization": f"Bearer {self._api_key}"
         }
 
-        self.session = requests.Session()
-
-        @classmethod
-        def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: Callable) -> CoreSchema:
-            return core_schema.any_schema()
 
     def get_api_key(self) -> str:
         return self._api_key
@@ -103,13 +98,14 @@ class LLMClient:
         }
 
         try:
-            response = self.session.post(
-                self._inference_base_url,
-                headers=self._headers,
-                json=payload,
-                timeout=60  # Increase timeout to 60 seconds or more
-            )
-            return self._handle_response(response)
+            with requests.Session() as session:
+                response = session.post(
+                    self._inference_base_url,
+                    headers=self._headers,
+                    json=payload,
+                    timeout=120  # Increase timeout to 60 seconds or more
+                )
+                return self._handle_response(response)
         except requests.RequestException as e:
             logger.error(f"RequestException: {e}")
             raise
