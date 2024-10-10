@@ -151,6 +151,7 @@ class PDFParser(BaseParser):
             base64_images: Optional[List[str]] = None
             page_answers: Optional[List[str]] = None
             entities_json_schema: Optional[Dict[str, Any]] = None
+            entities_schema: Optional[List[Entity]] = None
 
 
         # initialize the state with the avaible field at the start, the entity class definition
