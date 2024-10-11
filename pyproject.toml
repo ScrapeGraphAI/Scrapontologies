@@ -1,6 +1,6 @@
 [project]
 name = "scrapontology"
-version = "1.0.0"
+version = "1.1.0"
 description = "Library for extracting schemas and building ontologies from documents using LLM"
 authors = [
     { name = "Lorenzo Padoan", email = "lorenzo.padoan977@gmail.com" },

@@ -1,3 +1,21 @@
+## [1.1.0](https://github.com/ScrapeGraphAI/Scrapontology/compare/v1.0.0...v1.1.0) (2024-10-11)
+
+
+### Features
+
+* digestion multiples pdfs ([e61e3ee](https://github.com/ScrapeGraphAI/Scrapontology/commit/e61e3ee21594c30f3e55eaee736966fe019139f5))
+* extraction values of entities single file ([1b59a65](https://github.com/ScrapeGraphAI/Scrapontology/commit/1b59a657d4b642a94ff95bfe011ed392930c7dc7))
+
+
+### Bug Fixes
+
+* extract entities-relationships schema ([2826d9d](https://github.com/ScrapeGraphAI/Scrapontology/commit/2826d9d93d06416db84155007be87e7e7d4ca2ca))
+
+
+### Refactor
+
+* entities_schema, relations_schema ([cdc463d](https://github.com/ScrapeGraphAI/Scrapontology/commit/cdc463d6e5ee949568a977cfca1e6ceaf8d98899))
+
 ## 1.0.0 (2024-10-07)
 
 
