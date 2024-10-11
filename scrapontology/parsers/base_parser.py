@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from ..primitives import Entity, Relation
 from ..llm_client import LLMClient
 
@@ -17,11 +17,11 @@ class BaseParser(ABC):
             "Authorization": f"Bearer {self.llm_client.get_api_key()}"
         }
         self._json_schema = {}
-        self._entities = []
-        self._relations = []
+        self._entities_schema = []
+        self._relations_schema = []
 
     @abstractmethod
-    def extract_entities(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
+    def extract_entities_schema(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
         """
         Extracts entities from the given file.
 
@@ -35,7 +35,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def extract_relations(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
+    def extract_relations_schema(self, file_path: Optional[str] = None, prompt: Optional[str] = None) -> List[Relation]:
         """
         Extracts relations from the given file.
 
@@ -62,7 +62,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def get_entities(self) -> List[Entity]:
+    def get_entities_schema(self) -> List[Entity]:
         """
         Retrieves the list of entities.
 
@@ -73,7 +73,7 @@ class BaseParser(ABC):
 
 
     @abstractmethod
-    def get_relations(self) -> List[Relation]:
+    def get_relations_schema(self) -> List[Relation]:
         """
         Retrieves the list of relations.
 
@@ -95,7 +95,7 @@ class BaseParser(ABC):
 
 
     @abstractmethod
-    def get_entities_graph(self):
+    def get_entities_schema_graph(self):
         """
         Retrieves the state graph for entities extraction.
 
@@ -105,7 +105,7 @@ class BaseParser(ABC):
         pass
 
     @abstractmethod
-    def get_relations_graph(self):
+    def get_relations_schema_graph(self):
         """
         Retrieves the state graph for relations extraction.
 
@@ -114,6 +114,9 @@ class BaseParser(ABC):
         """
         pass
 
+    @abstractmethod
+    def extract_entities_from_file(self, file_path: Union[str, List[str]]):
+        pass
 
 
 

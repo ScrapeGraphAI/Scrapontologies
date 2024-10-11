@@ -1,6 +1,7 @@
 from scrapontology import FileExtractor, PDFParser
 from scrapontology.llm_client import LLMClient
 import os
+import json
 from dotenv import load_dotenv
 
 def main():
@@ -22,7 +23,13 @@ def main():
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities JSON schema from the PDF
-    entities_json_schema = pdf_extractor.entities_json_schema()
+    entities_json_schema = pdf_extractor.generate_entities_json_schema()
+
+    # Write json document
+    with open("entities_json_schema.json", "w") as f:
+        json.dump(entities_json_schema, f, indent=4)
+
+    print(entities_json_schema)
 
 
 if __name__ == "__main__":

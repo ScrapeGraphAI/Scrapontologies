@@ -29,7 +29,7 @@ def main():
     """
 
     # Extract entities from the PDF using the custom prompt
-    entities = pdf_extractor.extract_entities(prompt=custom_prompt)
+    entities = pdf_extractor.extract_entities_schema(prompt=custom_prompt)
     print("Extracted Entities:", entities)
 
 if __name__ == "__main__":

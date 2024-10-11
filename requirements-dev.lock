@@ -80,6 +80,8 @@ mccabe==0.7.0
     # via pylint
 msgpack==1.1.0
     # via langgraph-checkpoint
+neo4j==5.25.0
+    # via scrapontology
 orjson==3.10.7
     # via langsmith
 packaging==24.1
@@ -112,6 +114,8 @@ pytest==8.0.0
 pytest-mock==3.14.0
 python-dotenv==1.0.1
     # via scrapontology
+pytz==2024.2
+    # via neo4j
 pyyaml==6.0.2
     # via langchain-core
 requests==2.32.3
