@@ -15,3 +15,8 @@ class Relation:
     name: str
     type: str = None
     attributes: Dict[str, Any] = None
+
+@dataclass
+class Record:
+    id: str
+    entities: List[Entity]

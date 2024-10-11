@@ -287,6 +287,9 @@ I want something like:\n
           "worked_days": 22
         }}
 }}
-
 ```
+Remember to use the normalization and all the 3 forms of normalizations.
+Separate the tables in the jsons with respective attributes in order to be used in the CREATE TABLES and INSERT INTO statements.
+Basically you have to create the json that contains the tables and the data to be inserted.
+Each field containing a string that represent mainly a number must be converted to a numeric value, if not available provide the field empty.
 """

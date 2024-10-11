@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional, Literal, Union
 from .base_parser import BaseParser
-from ..primitives import Entity, Relation
+from ..primitives import Entity, Relation, Record
 import base64
 import os
 import tempfile
@@ -513,7 +513,7 @@ class PDFParser(BaseParser):
 
     
     
-    def extract_entities_from_file(self, file_path: Union[str, List[str]], prompt: Optional[str] = None) -> List[Entity]:
+    def extract_entities_from_file(self, file_path: Union[str, List[str]], prompt: Optional[str] = None) -> List[Record]:
         """
         Extract entities from the given file(s) using the entities_json_schema.
 
@@ -535,7 +535,7 @@ class PDFParser(BaseParser):
         self.state_extract_entities.entities_json_schema = self._json_schema
         self.state_extract_entities.user_prompt_for_filter = prompt
 
-        all_entities = []
+        records = []
 
         for path in file_path:
             if not os.path.exists(path):
@@ -552,9 +552,10 @@ class PDFParser(BaseParser):
             self.graph_for_extract_entities.invoke(self.state_extract_entities)
 
             if self.state_extract_entities.entities:
-                all_entities.extend(self.state_extract_entities.entities)
+                record = Record(id=path, entities=self.state_extract_entities.entities) 
+                records.append(record)
 
-        return all_entities
+        return records
 
     # Additional methods will be implemented below
 
@@ -644,20 +645,24 @@ class PDFParser(BaseParser):
         return self.state_extract_entities
 
     def _combine_entities_data(self, all_entities_data):
-        # insert onlu not NA value if the value is an object or a list check if the values inside are not NA before to add them
         combined_data = {}
         for entities_data in all_entities_data:
-            for key, value in entities_data.items():
-                if key == "quickFacts":
-                    print(value)
-                if value not in (None, "NA", ""):
-                    if key not in combined_data:
-                        combined_data[key] = value
-                    elif isinstance(combined_data[key], dict) and isinstance(value, dict):
-                        combined_data[key].update({k: v for k, v in value.items() if v not in (None, "NA", "")})
-                    elif isinstance(combined_data[key], list) and isinstance(value, list):
-                        combined_data[key].extend([v for v in value if v not in (None, "NA", "")])
-                    else:
-                        # If the values are not dictionaries or lists, keep the latest non-empty value
-                        combined_data[key] = value
+            combined_data = self.merge_dicts_preferring_non_na(combined_data, entities_data)
         return combined_data
+
+    def merge_dicts_preferring_non_na(self, d1, d2):
+        for key, value in d2.items():
+            if value in (None, 'NA', ''):
+                continue
+            if key not in d1 or d1[key] in (None, 'NA', ''):
+                d1[key] = value
+            else:
+                if isinstance(d1[key], dict) and isinstance(value, dict):
+                    d1[key] = self.merge_dicts_preferring_non_na(d1[key], value)
+                elif isinstance(d1[key], list) and isinstance(value, list):
+                    # Extend the list, excluding 'NA' values
+                    d1[key].extend([v for v in value if v not in (None, 'NA', '')])
+                else:
+                    # Do not overwrite existing non-'NA' values
+                    pass
+        return d1
