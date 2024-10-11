@@ -483,13 +483,37 @@ class PDFParser(BaseParser):
         self.state_entities_schema.base64_images = base64_images
         return self.state_entities_schema
     
-    def get_entities_schema_graph(self):
+    def get_entities_schema_graph(self) -> StateGraph:
+        """
+        Get the graph for entities schema.
+
+        Returns:
+            StateGraph: The graph object for entities schema.
+        """
         return self.graph_for_entities_schema
     
-    def get_relations_schema_graph(self):
+    def get_relations_schema_graph(self) -> StateGraph:
+        """
+        Get the graph for relations schema.
+
+        Returns:
+            StateGraph: The graph object for relations schema.
+        """
         return self.graph_for_relations
     
     def generate_json_schema(self, file_path: str) -> Dict[str, Any]:
+        """
+        Generate JSON schema from the given PDF file.
+
+        Args:
+            file_path (str): Path to the PDF file.
+
+        Returns:
+            Dict[str, Any]: The generated JSON schema.
+
+        Raises:
+            FileNotFoundError: If the specified PDF file is not found.
+        """
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"PDF file not found: {file_path}")
         
@@ -499,16 +523,40 @@ class PDFParser(BaseParser):
         logging.info(f"Entities JSON Schema: {self._json_schema}")
         return self._json_schema
 
-    def get_json_schema_graph(self):
+    def get_json_schema_graph(self) -> StateGraph:
+        """
+        Get the graph for JSON schema generation.
+
+        Returns:
+            StateGraph: The graph object for JSON schema generation.
+        """
         return self.graph_for_entities_schema_json_schema
 
-    def get_json_schema(self):
+    def get_json_schema(self) -> Dict[str, Any]:
+        """
+        Get the generated JSON schema.
+
+        Returns:
+            Dict[str, Any]: The generated JSON schema.
+        """
         return self._json_schema
     
-    def get_entities_schema(self):
+    def get_entities_schema(self) -> Dict[str, Any]:
+        """
+        Get the entities schema.
+
+        Returns:
+            Dict[str, Any]: The entities schema.
+        """
         return self._entities_schema
     
-    def get_relations_schema(self):
+    def get_relations_schema(self) -> Dict[str, Any]:
+        """
+        Get the relations schema.
+
+        Returns:
+            Dict[str, Any]: The relations schema.
+        """
         return self._relations_schema
 
     
@@ -560,6 +608,21 @@ class PDFParser(BaseParser):
     # Additional methods will be implemented below
 
     def _process_pdf_for_extraction(self, *_):
+        """
+        Process a PDF file for entity extraction.
+
+        This method loads the PDF file as images, converts each page to base64 format,
+        and stores the results in the state_extract_entities object.
+
+        Args:
+            *_: Unused arguments.
+
+        Returns:
+            The updated state_extract_entities object or None if no images were loaded.
+
+        Raises:
+            FileNotFoundError: If the PDF file path is not provided.
+        """
         if not self.state_extract_entities.file_path:
             raise FileNotFoundError("PDF file path is not provided.")
 
@@ -645,12 +708,37 @@ class PDFParser(BaseParser):
         return self.state_extract_entities
 
     def _combine_entities_data(self, all_entities_data):
+        """
+        Combines entity data from multiple sources into a single dictionary.
+
+        Args:
+            all_entities_data (list): A list of dictionaries, each containing entity data.
+
+        Returns:
+            dict: A combined dictionary of entity data, with non-NA values preferred.
+        """
         combined_data = {}
         for entities_data in all_entities_data:
             combined_data = self.merge_dicts_preferring_non_na(combined_data, entities_data)
         return combined_data
 
     def merge_dicts_preferring_non_na(self, d1, d2):
+        """
+        Merges two dictionaries, preferring non-NA values from d2 over d1.
+
+        Args:
+            d1 (dict): The first dictionary to merge.
+            d2 (dict): The second dictionary to merge, whose non-NA values take precedence.
+
+        Returns:
+            dict: A merged dictionary with non-NA values preferred.
+
+        Notes:
+            - NA values are considered to be None, 'NA', or empty string.
+            - For nested dictionaries, the merge is performed recursively.
+            - For lists, values from d2 are appended to d1, excluding NA values.
+            - For other types, existing non-NA values in d1 are not overwritten.
+        """
         for key, value in d2.items():
             if value in (None, 'NA', ''):
                 continue
