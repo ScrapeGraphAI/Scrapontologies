@@ -3,6 +3,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.output_parsers import StrOutputParser
 from typing import Optional
 
+
 class LcLLMClient(LLMClient):
 
     def __init__(self, lc_model: BaseChatModel):
@@ -12,7 +13,7 @@ class LcLLMClient(LLMClient):
             lc_model (BaseChatModel): The langchain model.
         """
         self.lc_model = lc_model | StrOutputParser()
-    
+
     def get_response(self, prompt: str, image_url: Optional[str] = None) -> str:
         """Get a response from the language model.
 
@@ -29,11 +30,9 @@ class LcLLMClient(LLMClient):
             # Assuming the API supports image URLs in this format
             messages[0]["content"] = [
                 {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
+                {"type": "image_url", "image_url": {"url": image_url}},
             ]
-        
+
         response = self.lc_model.invoke(messages)
-        
+
         return response
-        
-    

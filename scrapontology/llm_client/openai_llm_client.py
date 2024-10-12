@@ -7,9 +7,15 @@ from pydantic_core import CoreSchema, core_schema
 
 logger = logging.getLogger(__name__)
 
+
 class OpenAILLMClient(LLMClient):
-    def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions",
-                 model: str = "gpt-4o-2024-08-06", temperature: float = 0.0):
+    def __init__(
+        self,
+        api_key: str,
+        inference_base_url: str = "https://api.openai.com/v1/chat/completions",
+        model: str = "gpt-4o-2024-08-06",
+        temperature: float = 0.0,
+    ):
         """
         Initializes the LLMClient with API credentials and settings.
 
@@ -26,9 +32,8 @@ class OpenAILLMClient(LLMClient):
 
         self._headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self._api_key}"
+            "Authorization": f"Bearer {self._api_key}",
         }
-
 
     def get_api_key(self) -> str:
         return self._api_key
@@ -63,7 +68,7 @@ class OpenAILLMClient(LLMClient):
         try:
             response.raise_for_status()
             data = response.json()
-            return data['choices'][0]['message']['content']
+            return data["choices"][0]["message"]["content"]
         except requests.HTTPError as e:
             logger.error(f"HTTPError: {e}")
             logger.error(f"Response content: {response.text}")
@@ -89,7 +94,7 @@ class OpenAILLMClient(LLMClient):
             # Assuming the API supports image URLs in this format
             messages[0]["content"] = [
                 {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
+                {"type": "image_url", "image_url": {"url": image_url}},
             ]
 
         payload = {
@@ -104,7 +109,7 @@ class OpenAILLMClient(LLMClient):
                     self._inference_base_url,
                     headers=self._headers,
                     json=payload,
-                    timeout=120  # Increase timeout to 60 seconds or more
+                    timeout=120,  # Increase timeout to 60 seconds or more
                 )
                 return self._handle_response(response)
         except requests.RequestException as e:

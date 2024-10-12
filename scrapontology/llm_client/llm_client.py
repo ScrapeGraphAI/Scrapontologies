@@ -7,6 +7,7 @@ from abc import ABC
 
 logger = logging.getLogger(__name__)
 
+
 class LLMClient(ABC):
 
     def get_response(self, prompt: str, image_url: Optional[str] = None) -> str:
