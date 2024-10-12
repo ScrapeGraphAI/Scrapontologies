@@ -1,3 +1,4 @@
+from .llm_client import LLMClient
 import requests
 import logging
 from typing import Dict, Any, Optional, List
@@ -6,7 +7,7 @@ from pydantic_core import CoreSchema, core_schema
 
 logger = logging.getLogger(__name__)
 
-class LLMClient:
+class OpenAILLMClient(LLMClient):
     def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions",
                  model: str = "gpt-4o-2024-08-06", temperature: float = 0.0):
         """
