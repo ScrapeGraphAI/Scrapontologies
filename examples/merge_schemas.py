@@ -1,5 +1,5 @@
 from scrapontology import FileExtractor, PDFParser
-from scrapontology.llm_client import LLMClient
+from scrapontology.llm_client.openai_llm_client import OpenAILLMClient
 import os
 from dotenv import load_dotenv
 
@@ -17,7 +17,7 @@ def main():
     pdf_path = os.path.join(curr_dirr, pdf_name)
 
     # Create a PDFParser instance with the API key
-    llm_client = LLMClient(api_key)
+    llm_client = OpenAILLMClient(api_key)
     pdf_parser = PDFParser(llm_client)
 
     # Create a FileExtractor instance with the PDF parser

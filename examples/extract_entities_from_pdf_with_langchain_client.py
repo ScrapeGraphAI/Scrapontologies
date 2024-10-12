@@ -1,7 +1,8 @@
 from scrapontology import PDFParser
-from scrapontology.llm_client.openai_llm_client import OpenAILLMClient
+from scrapontology.llm_client.lc_llm_client import LcLLMClient
 from dotenv import load_dotenv
 import os
+from langchain_openai import ChatOpenAI
 
 def main():
     # Load environment variables
@@ -26,7 +27,8 @@ def main():
         raise FileNotFoundError("No test files found in the tests directory.")
 
     # Create an LLMClient instance
-    llm_client = OpenAILLMClient(api_key)
+    lc_llm = ChatOpenAI()
+    llm_client = LcLLMClient(lc_llm)
 
     # Create a PDFParser instance with the LLMClient
     pdf_parser = PDFParser(llm_client)
