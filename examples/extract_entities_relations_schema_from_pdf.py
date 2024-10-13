@@ -1,6 +1,6 @@
 from scrapontology import FileExtractor, PDFParser
 from scrapontology.renderers import PyechartsRenderer
-from scrapontology.llm_client.openai_llm_client import OpenAILLMClient
+from scrapontology.llm_client import LLMClient
 
 import os
 from dotenv import load_dotenv
@@ -16,9 +16,23 @@ def main():
     # Path to the PDF file
     pdf_name = "test.pdf"
     pdf_path = os.path.join(curr_dirr, pdf_name)
-
+    
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
+    # Create an LLMClient instance
+    llm_client = LLMClient(**llm_client_config)
+    
     # Create a PDFParser instance with the API key
-    llm_client = OpenAILLMClient(api_key)
     pdf_parser = PDFParser(llm_client)
 
     # Create a FileExtraxctor instance with the PDF parser

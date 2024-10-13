@@ -1,5 +1,5 @@
 from scrapontology import PDFParser
-from scrapontology.llm_client.openai_llm_client import OpenAILLMClient
+from scrapontology.llm_client import LLMClient
 from dotenv import load_dotenv
 import os
 
@@ -25,8 +25,20 @@ def main():
     if not pdf_path:
         raise FileNotFoundError("No test files found in the tests directory.")
 
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
     # Create an LLMClient instance
-    llm_client = OpenAILLMClient(api_key)
+    llm_client = LLMClient(**llm_client_config)
 
     # Create a PDFParser instance with the LLMClient
     pdf_parser = PDFParser(llm_client)

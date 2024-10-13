@@ -18,7 +18,13 @@ dependencies = [
     "urllib3==2.2.2",
     "langgraph==0.2.31",
     "psycopg2==2.9.9",
-    "neo4j== 5.25.0"
+    "neo4j== 5.25.0",
+    "langchain==0.3.0",
+    "langchain-core==0.3.10",
+    "langchain-openai==0.2.2",
+    "langchain-anthropic==0.2.3",
+    "langchain-google-vertexai==2.0.5",
+    "langchain-google-genai==2.0.1"
 ]
 
 license = "MIT"

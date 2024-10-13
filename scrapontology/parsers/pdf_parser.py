@@ -11,7 +11,7 @@ import inspect
 import subprocess
 import logging
 import re
-from ..llm_client.llm_client import LLMClient
+from ..llm_client import LLMClient
 from requests.exceptions import ReadTimeout
 from langgraph.graph import StateGraph, START, END
 from pydantic import BaseModel

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, Union
 from ..primitives import Entity, Relation
-from ..llm_client.llm_client import LLMClient
+from ..llm_client import LLMClient
 
 class BaseParser(ABC):
     def __init__(self, llm_client: LLMClient):
@@ -12,6 +12,13 @@ class BaseParser(ABC):
             llm_client (LLMClient): The LLM client for inference.
         """
         self.llm_client = llm_client
+        self._headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.llm_client.get_api_key()}"
+        }
+        self._json_schema = {}
+        self._entities_schema = []
+        self._relations_schema = []
 
     @abstractmethod
     def extract_entities_schema(self, file_path: str, prompt: Optional[str] = None) -> List[Entity]:
@@ -110,6 +117,3 @@ class BaseParser(ABC):
     @abstractmethod
     def extract_entities_from_file(self, file_path: Union[str, List[str]]):
         pass
-
-
-
