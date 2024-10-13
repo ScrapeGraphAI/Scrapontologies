@@ -5,6 +5,7 @@ from typing import Any, Callable
 from pydantic_core import CoreSchema, core_schema
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.language_models.chat_models import BaseChatModel
+from langchain.chat_models import init_chat_model
 
 logger = logging.getLogger(__name__)
 
@@ -45,85 +46,13 @@ class LLMClient:
         base_url: str | None = None,
         llm_config: Dict[str, Any] | None = None,
     ) -> BaseChatModel:
-        supported_providers = {
-            "openai",
-            "anthropic",
-            "azure_openai",
-            "google_vertexai",
-            "google_genai",
-        }
-        if provider not in supported_providers:
-            raise ValueError(
-                f"provider {provider} is not supported. Supported providers are: {supported_providers}"
-            )
-        if provider == "openai":
-            try:
-                from langchain_openai import ChatOpenAI
-            except ImportError:
-                raise ImportError(
-                    "To use the OpenAI provider, please install the langchain_openai package."
-                )
-            return ChatOpenAI(
-                model=model, api_key=api_key, base_url=base_url, **llm_config
-            )
-        elif provider == "anthropic":
-            try:
-                from langchain_anthropic import ChatAnthropic
-            except ImportError:
-                raise ImportError(
-                    "To use the Anthropic provider, please install the langchain_anthropic package."
-                )
-            return ChatAnthropic(
-                model=model,
-                api_key=api_key,
-                **llm_config,
-            )
-        elif provider == "google_vertexai":
-            try:
-                from langchain_google_vertexai import ChatGoogleVertexAI
-            except ImportError:
-                raise ImportError(
-                    "To use the Google Vertex AI provider, please install the langchain_google package."
-                )
-            return ChatGoogleVertexAI(
-                model=model,
-                api_key=api_key,
-                base_url=base_url,
-                **llm_config,
-            )
-        elif provider == "google_genai":
-            try:
-                from langchain_google_genai import ChatGoogleGenAI
-            except ImportError:
-                raise ImportError(
-                    "To use the Google GenAI provider, please install the langchain_google package."
-                )
-            return ChatGoogleGenAI(
-                model=model,
-                api_key=api_key,
-                base_url=base_url,
-                **llm_config,
-            )
-        elif provider == "azure_openai":
-            try:
-                from langchain_openai import AzureChatOpenAI
-            except ImportError:
-                raise ImportError(
-                    "To use the Azure OpenAI provider, please install the langchain_azure package."
-                )
-            if "azure_deployment" not in llm_config:
-                raise ValueError(
-                    "Azure OpenAI provider requires 'azure_deployment' in llm_config."
-                )
-            return AzureChatOpenAI(
-                azure_deployment=llm_config["azure_deployment"],
-                model=model,
-                api_key=api_key,
-                base_url=base_url,
-                **llm_config,
-            )
-        else:
-            raise ValueError(f"Unsupported provider: {provider}")
+        return init_chat_model(
+            model=model,
+            model_provider=provider,
+            api_key=api_key,
+            base_url=base_url,
+            **llm_config,
+        )
 
     def get_api_key(self) -> str:
         return self._api_key
