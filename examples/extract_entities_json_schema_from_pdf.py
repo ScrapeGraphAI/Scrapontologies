@@ -17,7 +17,7 @@ def main():
     # Define the configuration for the LLMClient here
     # ************************************************
     llm_client_config = {
-        "provider": "openai",
+        "provider_name": "openai",
         "api_key": api_key,
         "model": "gpt-4o-2024-08-06",
         "llm_config": {
