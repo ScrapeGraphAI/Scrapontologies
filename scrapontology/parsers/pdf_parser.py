@@ -16,7 +16,6 @@ from requests.exceptions import ReadTimeout
 from langgraph.graph import StateGraph, START, END
 from pydantic import BaseModel
 from typing import Optional, List
-from collections import defaultdict
 
 
 # Set up logging
