@@ -11,8 +11,9 @@ def main():
 
     # Get current directory and set PDF path
     curr_dir = os.path.dirname(os.path.abspath(__file__))
+    test_dir = os.path.join(curr_dir, 'tests')
     pdf_name = "test.pdf"
-    pdf_path = os.path.join(curr_dir, pdf_name)
+    pdf_path = os.path.join(test_dir, pdf_name)
 
     # Create LLMClient and PDFParser instances
     llm_client = LLMClient(api_key)
