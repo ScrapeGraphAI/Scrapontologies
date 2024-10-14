@@ -16,8 +16,8 @@ class LLMClient:
         provider_name: str,
         api_key: str,
         model: str,
-        base_url: str | None = None,
-        llm_config: Dict[str, Any] | None = None,
+        base_url: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
     ):
         """
         Initializes the LLMClient with API credentials and settings.
@@ -42,9 +42,9 @@ class LLMClient:
         self,
         provider_name: str,
         api_key: str,
-        model: str | None = None,
-        base_url: str | None = None,
-        llm_config: Dict[str, Any] | None = None,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
     ) -> BaseChatModel:
         return init_chat_model(
             model=model,
@@ -78,10 +78,10 @@ class LLMClient:
     def set_llm_config(self, llm_config: Dict[str, Any]) -> None:
         self._llm_config = llm_config
 
-    def get_base_url(self) -> str | None:
+    def get_base_url(self) -> Optional[str]:
         return self._base_url
 
-    def set_base_url(self, base_url: str | None) -> None:
+    def set_base_url(self, base_url: Optional[str]) -> None:
         self._base_url = base_url
 
     def get_llm(self) -> BaseChatModel:
