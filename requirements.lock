@@ -35,10 +35,10 @@ certifi==2024.7.4
     # via httpcore
     # via httpx
     # via requests
-    # via scrapontology
+    # via scrapontologies
 charset-normalizer==3.3.2
     # via requests
-    # via scrapontology
+    # via scrapontologies
 defusedxml==0.7.1
     # via langchain-anthropic
 distro==1.9.0
@@ -136,7 +136,7 @@ idna==3.8
     # via anyio
     # via httpx
     # via requests
-    # via scrapontology
+    # via scrapontologies
     # via yarl
 jiter==0.6.1
     # via anthropic
@@ -146,9 +146,9 @@ jsonpatch==1.33
 jsonpointer==3.0.0
     # via jsonpatch
 langchain==0.3.3
-    # via scrapontology
+    # via scrapontologies
 langchain-anthropic==0.2.3
-    # via scrapontology
+    # via scrapontologies
 langchain-core==0.3.10
     # via langchain
     # via langchain-anthropic
@@ -159,19 +159,19 @@ langchain-core==0.3.10
     # via langchain-text-splitters
     # via langgraph
     # via langgraph-checkpoint
-    # via scrapontology
+    # via scrapontologies
 langchain-google-genai==2.0.1
-    # via scrapontology
+    # via scrapontologies
 langchain-google-vertexai==2.0.5
-    # via scrapontology
+    # via scrapontologies
 langchain-ollama==0.2.0
-    # via scrapontology
+    # via scrapontologies
 langchain-openai==0.2.2
-    # via scrapontology
+    # via scrapontologies
 langchain-text-splitters==0.3.0
     # via langchain
 langgraph==0.2.31
-    # via scrapontology
+    # via scrapontologies
 langgraph-checkpoint==1.0.14
     # via langgraph
 langsmith==0.1.129
@@ -183,7 +183,7 @@ multidict==6.1.0
     # via aiohttp
     # via yarl
 neo4j==5.25.0
-    # via scrapontology
+    # via scrapontologies
 numpy==1.26.4
     # via langchain
     # via shapely
@@ -199,7 +199,7 @@ packaging==24.1
     # via huggingface-hub
     # via langchain-core
 pillow==10.4.0
-    # via scrapontology
+    # via scrapontologies
 propcache==0.2.0
     # via yarl
 proto-plus==1.24.0
@@ -218,7 +218,7 @@ protobuf==5.28.2
     # via grpcio-status
     # via proto-plus
 psycopg2==2.9.9
-    # via scrapontology
+    # via scrapontologies
 pyasn1==0.6.1
     # via pyasn1-modules
     # via rsa
@@ -242,7 +242,7 @@ pyparsing==3.2.0
 python-dateutil==2.9.0.post0
     # via google-cloud-bigquery
 python-dotenv==1.0.1
-    # via scrapontology
+    # via scrapontologies
 pytz==2024.2
     # via neo4j
 pyyaml==6.0.2
@@ -258,7 +258,7 @@ requests==2.32.3
     # via huggingface-hub
     # via langchain
     # via langsmith
-    # via scrapontology
+    # via scrapontologies
     # via tiktoken
 rsa==4.9
     # via google-auth
@@ -299,6 +299,6 @@ uritemplate==4.1.1
     # via google-api-python-client
 urllib3==2.2.2
     # via requests
-    # via scrapontology
+    # via scrapontologies
 yarl==1.15.2
     # via aiohttp

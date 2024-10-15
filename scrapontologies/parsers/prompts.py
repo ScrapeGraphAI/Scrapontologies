@@ -228,7 +228,7 @@ You have to extract the entities with the following format:
 {entity_class}
 
 Takes as reference the following python code for building the entities:
-from scrapontology.primitives import Entity
+from scrapontologies.primitives import Entity
 
 # Define entities with nested attributes
 entities = [

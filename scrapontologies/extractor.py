@@ -9,7 +9,7 @@ from .db_client import DBClient, PostgresDBClient
 import json
 from langgraph.graph import StateGraph, END, START
 from typing import Literal
-from scrapontology.db_client import PostgresDBClient
+from scrapontologies.db_client import PostgresDBClient
 from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

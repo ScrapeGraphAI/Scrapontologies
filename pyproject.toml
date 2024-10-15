@@ -1,5 +1,5 @@
 [project]
-name = "scrapontology"
+name = "scrapontologies"
 version = "0.1.0"
 description = "Library for extracting schemas and building ontologies from documents using LLM"
 authors = [

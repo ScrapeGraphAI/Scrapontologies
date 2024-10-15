@@ -1,5 +1,5 @@
-from scrapontology import PDFParser
-from scrapontology.llm_client import LLMClient
+from scrapontologies import PDFParser
+from scrapontologies.llm_client import LLMClient
 from dotenv import load_dotenv
 import os
 

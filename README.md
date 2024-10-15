@@ -1,4 +1,4 @@
-# Scrapontology
+# scrapontologies
 
 ![graph](docs/assets/graph_pyecharts.png)
 
