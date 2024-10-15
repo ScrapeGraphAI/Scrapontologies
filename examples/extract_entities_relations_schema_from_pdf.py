@@ -16,23 +16,37 @@ def main():
     # Path to the PDF file
     pdf_name = "test.pdf"
     pdf_path = os.path.join(curr_dirr, pdf_name)
-
+    
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider_name": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
+    # Create an LLMClient instance
+    llm_client = LLMClient(**llm_client_config)
+    
     # Create a PDFParser instance with the API key
-    llm_client = LLMClient(api_key)
     pdf_parser = PDFParser(llm_client)
 
     # Create a FileExtraxctor instance with the PDF parser
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities from the PDF
-    entities = pdf_extractor.extract_entities()
-    relations = pdf_extractor.extract_relations()
+    entities_schema = pdf_extractor.extract_entities_schema()
+    relations_schema = pdf_extractor.extract_relations_schema()
 
     # Initialize the PyechartsRenderer
     renderer = PyechartsRenderer(repulsion=2000, title="Entity-Relationship Graph")
 
     # Render the graph using the provided nodes and links
-    graph = renderer.render(entities, relations, output_path="graph.html")
+    graph = renderer.render(entities_schema, relations_schema, output_path="graph.html")
 
     print(graph)
 

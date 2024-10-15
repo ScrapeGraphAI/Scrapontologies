@@ -11,19 +11,22 @@ import json
 from langgraph.graph import StateGraph, END, START
 from typing import TypedDict, Literal
 from scrapontology.db_client import PostgresDBClient
-from scrapontology.llm_client import LLMClient
 from pydantic import BaseModel
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class Extractor(ABC):
     @abstractmethod
-    def extract_entities(self) -> List[Entity]:
+    def extract_entities_schema(self) -> List[Entity]:
         pass
 
     @abstractmethod
-    def extract_relations(self) -> List[Relation]:
+    def extract_relations_schema(self) -> List[Relation]:
         pass
+
+    def extract_entities_schema(self) -> List[Entity]:
+        pass
+
     
     @abstractmethod
     def generate_entities_json_schema(self) -> Dict[str, Any]:
@@ -38,11 +41,11 @@ class Extractor(ABC):
         pass
 
     @abstractmethod
-    def get_entities(self) -> List[Entity]:
+    def get_entities_schema(self) -> List[Entity]:
         pass
 
     @abstractmethod
-    def get_relations(self) -> List[Relation]:
+    def get_relations_schema(self) -> List[Relation]:
         pass
 
     @abstractmethod
@@ -50,11 +53,11 @@ class Extractor(ABC):
         pass
 
     @abstractmethod
-    def get_entities_graph(self):
+    def get_entities_schema_graph(self):
         pass
 
     @abstractmethod
-    def get_relations_graph(self):
+    def get_relations_schema_graph(self):
         pass
 
     @abstractmethod
@@ -87,7 +90,7 @@ class FileExtractor(Extractor):
         self.parser = parser
         self.db_client = db_client
 
-    def extract_entities(self, prompt: Optional[str] = None) -> List[Entity]:
+    def extract_entities_schema(self, prompt: Optional[str] = None) -> List[Entity]:
         """
         Extract entities from the file.
 
@@ -97,10 +100,10 @@ class FileExtractor(Extractor):
         Returns:
             List[Entity]: A list of extracted entities.
         """
-        new_entities = self.parser.extract_entities(self.file_path, prompt)
+        new_entities = self.parser.extract_entities_schema(self.file_path, prompt)
         return new_entities
 
-    def extract_relations(self, prompt: Optional[str] = None) -> List[Relation]:
+    def extract_relations_schema(self, prompt: Optional[str] = None) -> List[Relation]:
         """
         Extract relations from the file.
 
@@ -110,7 +113,7 @@ class FileExtractor(Extractor):
         Returns:
             List[Relation]: A list of extracted relations.
         """
-        return self.parser.extract_relations(self.file_path, prompt)
+        return self.parser.extract_relations_schema(self.file_path, prompt)
     
     def generate_entities_json_schema(self) -> Dict[str, Any]:
         """
@@ -123,8 +126,8 @@ class FileExtractor(Extractor):
         return self.parser.get_json_schema()
 
     def delete_entity_or_relation(self, item_description: str) -> None:
-        entities_ids = [e.id for e in self.parser.get_entities()]
-        relations_ids = [(r.source, r.target, r.name) for r in self.parser.get_relations()]
+        entities_ids = [e.id for e in self.parser.get_entities_schema()]
+        relations_ids = [(r.source, r.target, r.name) for r in self.parser.get_relations_schema()]
         prompt = DELETE_PROMPT.format(
             entities=entities_ids,
             relations=relations_ids,
@@ -147,8 +150,8 @@ class FileExtractor(Extractor):
 
     def _delete_entity(self, entity_id: str) -> None:
         """Delete an entity and its related relations."""
-        entities = self.parser.get_entities()
-        relations = self.parser.get_relations()
+        entities = self.parser.get_entities_schema()
+        relations = self.parser.get_relations_schema()
         
         entities = [e for e in entities if e.id != entity_id]
         relations = [r for r in relations if r.source != entity_id and r.target != entity_id]
@@ -159,7 +162,7 @@ class FileExtractor(Extractor):
 
     def _delete_relation(self, relation_id: str) -> None:
         """Delete a relation."""
-        relations = self.parser.get_relations()
+        relations = self.parser.get_relations_schema()
         
         source, target, name = eval(relation_id)
         relations = [r for r in relations if not (r.source == source and r.target == target and r.name == name)]
@@ -169,23 +172,23 @@ class FileExtractor(Extractor):
 
   
     
-    def get_entities(self) -> List[Entity]:
+    def get_entities_schema(self) -> List[Entity]:
         """
         Get the entities from the parser.
 
         Returns:
             List[Entity]: The list of entities.
         """
-        return self.parser.get_entities()
+        return self.parser.get_entities_schema()
 
-    def get_relations(self) -> List[Relation]:
+    def get_relations_schema(self) -> List[Relation]:
         """
         Get the relations from the parser.
 
         Returns:
             List[Relation]: The list of relations.
         """
-        return self.parser.get_relations()
+        return self.parser.get_relations_schema()
 
         
     def merge_schemas(self, other_schema: Dict[str, Any]) -> Dict[str, Any]:
@@ -240,29 +243,29 @@ class FileExtractor(Extractor):
 
         self.set_json_schema(merged_schema)
         # Re-extract entities and relations based on the merged schema
-        new_entities = self.parser.extract_entities_from_json_schema(merged_schema)
-        new_relations = self.parser.extract_relations()
+        new_entities = self.parser.extract_entities_schema_from_json_schema(merged_schema)
+        new_relations = self.parser.extract_relations_schema()
 
         return self.get_json_schema()
 
 
-    def get_entities_graph(self):
+    def get_entities_schema_graph(self):
         """
         Retrieves the state graph for entities extraction.
 
         Returns:
             Any: The entities state graph from the parser.
         """
-        return self.parser.get_entities_graph()
+        return self.parser.get_entities_schema_graph()
 
-    def get_relations_graph(self):
+    def get_relations_schema_graph(self):
         """
         Retrieves the state graph for relations extraction.
 
         Returns:
             Any: The relations state graph from the parser.
         """
-        return self.parser.get_relations_graph()
+        return self.parser.get_relations_schema_graph()
 
     def get_json_schema(self):
         """
@@ -383,3 +386,6 @@ class FileExtractor(Extractor):
         graph.invoke(state_create_tables)
         self.db_client.disconnect()
         logger.info("Tables created successfully.")
+
+    def extract_entities(self):
+        return self.parser.extract_entities_schema()

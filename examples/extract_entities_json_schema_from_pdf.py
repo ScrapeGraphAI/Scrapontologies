@@ -1,6 +1,7 @@
 from scrapontology import FileExtractor, PDFParser
 from scrapontology.llm_client import LLMClient
 import os
+import json
 from dotenv import load_dotenv
 
 def main():
@@ -12,8 +13,20 @@ def main():
     pdf_name = "test.pdf"
     pdf_path = os.path.join(curr_dirr, pdf_name)
 
-    # Create a LLMClient instance with the API key
-    llm_client = LLMClient(api_key)
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider_name": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
+    # Create an LLMClient instance
+    llm_client = LLMClient(**llm_client_config)
 
     # Create a PDFParser instance with the LLMClient
     pdf_parser = PDFParser(llm_client)
@@ -22,7 +35,13 @@ def main():
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities JSON schema from the PDF
-    entities_json_schema = pdf_extractor.entities_json_schema()
+    entities_json_schema = pdf_extractor.generate_entities_json_schema()
+
+    # Write json document
+    with open("entities_json_schema.json", "w") as f:
+        json.dump(entities_json_schema, f, indent=4)
+
+    print(entities_json_schema)
 
 
 if __name__ == "__main__":

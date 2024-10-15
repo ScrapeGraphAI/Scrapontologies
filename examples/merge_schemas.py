@@ -17,14 +17,26 @@ def main():
     pdf_path = os.path.join(curr_dirr, pdf_name)
 
     # Create a PDFParser instance with the API key
-    llm_client = LLMClient(api_key)
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
+    llm_client = LLMClient(**llm_client_config)
     pdf_parser = PDFParser(llm_client)
 
     # Create a FileExtractor instance with the PDF parser
     pdf_extractor = FileExtractor(pdf_path, pdf_parser)
 
     # Extract entities from the PDF
-    entities = pdf_extractor.extract_entities()
+    entities = pdf_extractor.extract_entities_schema()
     print("Extracted Entities:", entities)
 
     # Hardcoded schema to merge with

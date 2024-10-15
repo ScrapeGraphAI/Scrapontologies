@@ -67,35 +67,35 @@ Extract the schema of the meaningful entities in this document, I want something
             "position"
           ]
         },
-        "workDetails": {
+        "work_details": {
           "type": "object",
           "properties": {
-            "workedHours": {
+            "worked_hours": {
               "type": "integer"
             },
-            "holidayHours": {
+            "holiday_hours": {
               "type": "integer"
             },
-            "workedDays": {
+            "worked_days": {
               "type": "integer"
             }
           },
           "required": [
-            "workedHours",
-            "holidayHours",
-            "workedDays"
+            "worked_hours",
+            "holiday_hours",
+            "worked_days"
           ]
         },
-        "basePay": {
+        "base_pay": {
           "type": "number"
         },
         "contingency": {
           "type": "number"
         },
-        "levelContract": {
+        "level_contract": {
           "type": "number"
         },
-        "totalCompensation": {
+        "total_compensation": {
           "type": "number"
         },
         "deductions": {
@@ -109,7 +109,7 @@ Extract the schema of the meaningful entities in this document, I want something
               "percentage": {
                 "type": "number"
               },
-              "taxableAmount": {
+              "taxable_amount": {
                 "type": "number"
               },
               "withholdings": {
@@ -122,29 +122,29 @@ Extract the schema of the meaningful entities in this document, I want something
             "required": [
               "description",
               "percentage",
-              "taxableAmount",
+              "taxable_amount",
               "withholdings",
               "earnings"
             ]
           }
         },
-        "netIncome": {
+        "net_income": {
           "type": "number"
         },
-        "totalNet": {
+        "total_net": {
           "type": "number"
         }
       },
       "required": [
         "employee",
-        "workDetails",
-        "basePay",
+        "work_details",
+        "base_pay",
         "contingency",
-        "levelContract",
-        "totalCompensation",
+        "level_contract",
+        "total_compensation",
         "deductions",
-        "netIncome",
-        "totalNet"
+        "net_income",
+        "total_net"
       ]
     }
   },
@@ -264,4 +264,32 @@ sql code without any comment before and after the code.
 
 Json schema:
 {json_schema}
+"""
+
+EXTRACT_DATA_PROMPT = """
+You are provided with a JSON schema, and you have to extract the data following the json schema below:
+if you dont' find the information isert NA in the field
+
+JSON Schema:
+{json_schema}
+
+I want something like:\n
+```json
+{{ 
+        "employee": {{
+          "name": "Lorenzo",
+          "qualification": "Master",
+          "position": "Software Engineer"
+        }},
+        "work_details": {{
+          "worked_hours": 40,
+          "holiday_hours": 0,
+          "worked_days": 22
+        }}
+}}
+```
+Remember to use the normalization and all the 3 forms of normalizations.
+Separate the tables in the jsons with respective attributes in order to be used in the CREATE TABLES and INSERT INTO statements.
+Basically you have to create the json that contains the tables and the data to be inserted.
+Each field containing a string that represent mainly a number must be converted to a numeric value, if not available provide the field empty.
 """

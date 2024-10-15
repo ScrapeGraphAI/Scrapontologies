@@ -10,10 +10,27 @@
 #   universal: false
 
 -e file:.
+aiohappyeyeballs==2.4.3
+    # via aiohttp
+aiohttp==3.10.10
+    # via langchain
+aiosignal==1.3.1
+    # via aiohttp
 annotated-types==0.7.0
     # via pydantic
+anthropic==0.36.0
+    # via langchain-anthropic
 anyio==4.6.0
+    # via anthropic
     # via httpx
+    # via openai
+async-timeout==4.0.3
+    # via aiohttp
+    # via langchain
+attrs==24.2.0
+    # via aiohttp
+cachetools==5.5.0
+    # via google-auth
 certifi==2024.7.4
     # via httpcore
     # via httpx
@@ -22,64 +39,260 @@ certifi==2024.7.4
 charset-normalizer==3.3.2
     # via requests
     # via scrapontology
+defusedxml==0.7.1
+    # via langchain-anthropic
+distro==1.9.0
+    # via anthropic
+    # via openai
+docstring-parser==0.16
+    # via google-cloud-aiplatform
 exceptiongroup==1.2.2
     # via anyio
+filelock==3.16.1
+    # via huggingface-hub
+frozenlist==1.4.1
+    # via aiohttp
+    # via aiosignal
+fsspec==2024.9.0
+    # via huggingface-hub
+google-ai-generativelanguage==0.6.10
+    # via google-generativeai
+google-api-core==2.21.0
+    # via google-ai-generativelanguage
+    # via google-api-core
+    # via google-api-python-client
+    # via google-cloud-aiplatform
+    # via google-cloud-bigquery
+    # via google-cloud-core
+    # via google-cloud-resource-manager
+    # via google-cloud-storage
+    # via google-generativeai
+google-api-python-client==2.149.0
+    # via google-generativeai
+google-auth==2.35.0
+    # via google-ai-generativelanguage
+    # via google-api-core
+    # via google-api-python-client
+    # via google-auth-httplib2
+    # via google-cloud-aiplatform
+    # via google-cloud-bigquery
+    # via google-cloud-core
+    # via google-cloud-resource-manager
+    # via google-cloud-storage
+    # via google-generativeai
+google-auth-httplib2==0.2.0
+    # via google-api-python-client
+google-cloud-aiplatform==1.70.0
+    # via langchain-google-vertexai
+google-cloud-bigquery==3.26.0
+    # via google-cloud-aiplatform
+google-cloud-core==2.4.1
+    # via google-cloud-bigquery
+    # via google-cloud-storage
+google-cloud-resource-manager==1.12.5
+    # via google-cloud-aiplatform
+google-cloud-storage==2.18.2
+    # via google-cloud-aiplatform
+    # via langchain-google-vertexai
+google-crc32c==1.6.0
+    # via google-cloud-storage
+    # via google-resumable-media
+google-generativeai==0.8.3
+    # via langchain-google-genai
+google-resumable-media==2.7.2
+    # via google-cloud-bigquery
+    # via google-cloud-storage
+googleapis-common-protos==1.65.0
+    # via google-api-core
+    # via grpc-google-iam-v1
+    # via grpcio-status
+grpc-google-iam-v1==0.13.1
+    # via google-cloud-resource-manager
+grpcio==1.66.2
+    # via google-api-core
+    # via googleapis-common-protos
+    # via grpc-google-iam-v1
+    # via grpcio-status
+grpcio-status==1.66.2
+    # via google-api-core
 h11==0.14.0
     # via httpcore
 httpcore==1.0.5
     # via httpx
+httplib2==0.22.0
+    # via google-api-python-client
+    # via google-auth-httplib2
 httpx==0.27.2
+    # via anthropic
+    # via langchain-google-vertexai
     # via langsmith
+    # via openai
+httpx-sse==0.4.0
+    # via langchain-google-vertexai
+huggingface-hub==0.25.2
+    # via tokenizers
 idna==3.8
     # via anyio
     # via httpx
     # via requests
     # via scrapontology
+    # via yarl
+jiter==0.6.1
+    # via anthropic
+    # via openai
 jsonpatch==1.33
     # via langchain-core
 jsonpointer==3.0.0
     # via jsonpatch
-langchain-core==0.3.7
+langchain==0.3.3
+    # via scrapontology
+langchain-anthropic==0.2.3
+    # via scrapontology
+langchain-core==0.3.10
+    # via langchain
+    # via langchain-anthropic
+    # via langchain-google-genai
+    # via langchain-google-vertexai
+    # via langchain-openai
+    # via langchain-text-splitters
     # via langgraph
     # via langgraph-checkpoint
+    # via scrapontology
+langchain-google-genai==2.0.1
+    # via scrapontology
+langchain-google-vertexai==2.0.5
+    # via scrapontology
+langchain-openai==0.2.2
+    # via scrapontology
+langchain-text-splitters==0.3.0
+    # via langchain
 langgraph==0.2.31
     # via scrapontology
 langgraph-checkpoint==1.0.14
     # via langgraph
 langsmith==0.1.129
+    # via langchain
     # via langchain-core
 msgpack==1.1.0
     # via langgraph-checkpoint
+multidict==6.1.0
+    # via aiohttp
+    # via yarl
+neo4j==5.25.0
+    # via scrapontology
+numpy==1.26.4
+    # via langchain
+    # via shapely
+openai==1.51.2
+    # via langchain-openai
 orjson==3.10.7
     # via langsmith
 packaging==24.1
+    # via google-cloud-aiplatform
+    # via google-cloud-bigquery
+    # via huggingface-hub
     # via langchain-core
 pillow==10.4.0
     # via scrapontology
+propcache==0.2.0
+    # via yarl
+proto-plus==1.24.0
+    # via google-ai-generativelanguage
+    # via google-api-core
+    # via google-cloud-aiplatform
+    # via google-cloud-resource-manager
+protobuf==5.28.2
+    # via google-ai-generativelanguage
+    # via google-api-core
+    # via google-cloud-aiplatform
+    # via google-cloud-resource-manager
+    # via google-generativeai
+    # via googleapis-common-protos
+    # via grpc-google-iam-v1
+    # via grpcio-status
+    # via proto-plus
 psycopg2==2.9.9
     # via scrapontology
+pyasn1==0.6.1
+    # via pyasn1-modules
+    # via rsa
+pyasn1-modules==0.4.1
+    # via google-auth
 pydantic==2.9.2
+    # via anthropic
+    # via google-cloud-aiplatform
+    # via google-generativeai
+    # via langchain
+    # via langchain-anthropic
     # via langchain-core
+    # via langchain-google-genai
+    # via langchain-google-vertexai
     # via langsmith
+    # via openai
 pydantic-core==2.23.4
     # via pydantic
+pyparsing==3.2.0
+    # via httplib2
+python-dateutil==2.9.0.post0
+    # via google-cloud-bigquery
 python-dotenv==1.0.1
     # via scrapontology
+pytz==2024.2
+    # via neo4j
 pyyaml==6.0.2
+    # via huggingface-hub
+    # via langchain
     # via langchain-core
+regex==2024.9.11
+    # via tiktoken
 requests==2.32.3
+    # via google-api-core
+    # via google-cloud-bigquery
+    # via google-cloud-storage
+    # via huggingface-hub
+    # via langchain
     # via langsmith
     # via scrapontology
+    # via tiktoken
+rsa==4.9
+    # via google-auth
+shapely==2.0.6
+    # via google-cloud-aiplatform
+six==1.16.0
+    # via python-dateutil
 sniffio==1.3.1
+    # via anthropic
     # via anyio
     # via httpx
+    # via openai
+sqlalchemy==2.0.35
+    # via langchain
 tenacity==8.5.0
+    # via langchain
     # via langchain-core
+tiktoken==0.8.0
+    # via langchain-openai
+tokenizers==0.20.1
+    # via anthropic
+tqdm==4.66.5
+    # via google-generativeai
+    # via huggingface-hub
+    # via openai
 typing-extensions==4.12.2
+    # via anthropic
     # via anyio
+    # via google-generativeai
+    # via huggingface-hub
     # via langchain-core
+    # via multidict
+    # via openai
     # via pydantic
     # via pydantic-core
+    # via sqlalchemy
+uritemplate==4.1.1
+    # via google-api-python-client
 urllib3==2.2.2
     # via requests
     # via scrapontology
+yarl==1.15.2
+    # via aiohttp
