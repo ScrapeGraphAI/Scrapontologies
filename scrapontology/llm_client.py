@@ -1,8 +1,6 @@
 import requests
 import logging
-from typing import Dict, Any, Optional, List
-from typing import Any, Callable
-from pydantic_core import CoreSchema, core_schema
+from typing import Dict, Optional
 
 logger = logging.getLogger(__name__)
 
