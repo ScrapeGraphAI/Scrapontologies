@@ -1,74 +1,94 @@
 import requests
 import logging
-from typing import Dict, Optional
+from typing import Dict, Any, Optional, List
+from typing import Any, Callable
+from pydantic_core import CoreSchema, core_schema
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain.chat_models import init_chat_model
 
 logger = logging.getLogger(__name__)
 
+
 class LLMClient:
-    def __init__(self, api_key: str, inference_base_url: str = "https://api.openai.com/v1/chat/completions",
-                 model: str = "gpt-4o-2024-08-06", temperature: float = 0.0):
+    def __init__(
+        self,
+        provider_name: str,
+        api_key: str,
+        model: str,
+        base_url: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
+    ):
         """
         Initializes the LLMClient with API credentials and settings.
 
         Args:
             api_key (str): The API key for authentication.
-            inference_base_url (str): The base URL for the inference API.
-            model (str): The model to use for inference.
-            temperature (float): The temperature setting for the model.
+            provider_name (str): The name of the language model provider.
+            model (str): The model name to use for the language model.
+            base_url (str | None): The base URL for the API. Defaults to None. It will be defaulted to the provider's base URL if not provided.
+            llm_config (Dict[str, Any] | None): Additional configuration for the language model. It will be passed to the creation of the langchain language model. When using the Azure OpenAI provider, it should contain the "azure_deployment" key.
         """
         self._api_key = api_key
-        self._inference_base_url = inference_base_url
         self._model = model
-        self._temperature = temperature
+        self._provider_name = provider_name.lower()
+        self._llm_config = llm_config if llm_config is not None else {}
+        self._base_url = base_url
+        self._llm = self._create_llm(
+            provider_name, api_key, model=model, base_url=base_url, llm_config=llm_config
+        )
 
-        self._headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self._api_key}"
-        }
-
+    def _create_llm(
+        self,
+        provider_name: str,
+        api_key: str,
+        model: Optional[str] = None,
+        base_url: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
+    ) -> BaseChatModel:
+        return init_chat_model(
+            model=model,
+            model_provider=provider_name,
+            api_key=api_key,
+            base_url=base_url,
+            **llm_config,
+        )
 
     def get_api_key(self) -> str:
         return self._api_key
 
-    def get_headers(self) -> Dict[str, str]:
-        return self._headers
+    def set_api_key(self, api_key: str) -> None:
+        self._api_key = api_key
 
     def get_model(self) -> str:
         return self._model
 
-    def get_temperature(self) -> float:
-        return self._temperature
-
-    def get_inference_base_url(self) -> str:
-        return self._inference_base_url
-
-    def set_api_key(self, api_key: str):
-        self._api_key = api_key
-        self._headers["Authorization"] = f"Bearer {self._api_key}"
-
-    def set_model(self, model: str):
+    def set_model(self, model: str) -> None:
         self._model = model
 
-    def set_temperature(self, temperature: float):
-        self._temperature = temperature
+    def get_provider_name(self) -> str:
+        return self._provider_name
 
-    def set_inference_base_url(self, inference_base_url: str):
-        self._inference_base_url = inference_base_url
+    def set_provider_name(self, provider: str) -> None:
+        self._provider_name = provider
 
-    def _handle_response(self, response: requests.Response) -> str:
-        """Handles the API response, checking for errors and extracting the content."""
-        try:
-            response.raise_for_status()
-            data = response.json()
-            return data['choices'][0]['message']['content']
-        except requests.HTTPError as e:
-            logger.error(f"HTTPError: {e}")
-            logger.error(f"Response content: {response.text}")
-            raise
-        except KeyError as e:
-            logger.error(f"KeyError: {e}")
-            logger.error(f"Malformed response: {response.text}")
-            raise
+    def get_llm_config(self) -> Dict[str, Any]:
+        return self._llm_config
+
+    def set_llm_config(self, llm_config: Dict[str, Any]) -> None:
+        self._llm_config = llm_config
+
+    def get_base_url(self) -> Optional[str]:
+        return self._base_url
+
+    def set_base_url(self, base_url: Optional[str]) -> None:
+        self._base_url = base_url
+
+    def get_llm(self) -> BaseChatModel:
+        return self._llm
+
+    def set_llm(self, llm: BaseChatModel) -> None:
+        self._llm = llm
 
     def get_response(self, prompt: str, image_url: Optional[str] = None) -> str:
         """Get a response from the language model.
@@ -86,24 +106,12 @@ class LLMClient:
             # Assuming the API supports image URLs in this format
             messages[0]["content"] = [
                 {"type": "text", "text": prompt},
-                {"type": "image_url", "image_url": {"url": image_url}}
+                {"type": "image_url", "image_url": {"url": image_url}},
             ]
 
-        payload = {
-            "model": self._model,
-            "temperature": self._temperature,
-            "messages": messages,
-        }
-
         try:
-            with requests.Session() as session:
-                response = session.post(
-                    self._inference_base_url,
-                    headers=self._headers,
-                    json=payload,
-                    timeout=120  # Increase timeout to 60 seconds or more
-                )
-                return self._handle_response(response)
+            chain = self._llm | StrOutputParser()
+            return chain.invoke(messages)
         except requests.RequestException as e:
             logger.error(f"RequestException: {e}")
             raise

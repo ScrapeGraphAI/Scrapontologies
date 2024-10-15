@@ -117,6 +117,3 @@ class BaseParser(ABC):
     @abstractmethod
     def extract_entities_from_file(self, file_path: Union[str, List[str]]):
         pass
-
-
-

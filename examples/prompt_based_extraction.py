@@ -15,7 +15,19 @@ def main():
     pdf_path = os.path.join(curr_dir, pdf_name)
 
     # Create an LLMClient instance
-    llm_client = LLMClient(api_key)
+    # ************************************************
+    # Define the configuration for the LLMClient here
+    # ************************************************
+    llm_client_config = {
+        "provider": "openai",
+        "api_key": api_key,
+        "model": "gpt-4o-2024-08-06",
+        "llm_config": {
+            "temperature": 0.0,
+        }
+    }
+    
+    llm_client = LLMClient(**llm_client_config)
 
     # Create a PDFParser instance with the LLMClient
     pdf_parser = PDFParser(llm_client)

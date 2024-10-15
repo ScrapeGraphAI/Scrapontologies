@@ -9,16 +9,23 @@ authors = [
 ]
 
 dependencies = [
-    "certifi==2024.7.4",
-    "charset-normalizer==3.3.2",
-    "idna==3.8",
-    "pillow==10.4.0",
-    "python-dotenv==1.0.1",
-    "requests==2.32.3",
-    "urllib3==2.2.2",
-    "langgraph==0.2.31",
-    "psycopg2==2.9.9",
-    "neo4j== 5.25.0"
+    "certifi>=2024.7.4",
+    "charset-normalizer>=3.3.2",
+    "idna>=3.8",
+    "pillow>=10.4.0",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "urllib3>=2.2.2",
+    "langgraph>=0.2.31",
+    "psycopg2>=2.9.9",
+    "neo4j>= 5.25.0",
+    "langchain>=0.3.0",
+    "langchain-core>=0.3.10",
+    "langchain-openai>=0.2.2",
+    "langchain-anthropic>=0.2.3",
+    "langchain-google-vertexai>=2.0.5",
+    "langchain-google-genai>=2.0.1",
+    "langchain-ollama>=0.3.3"
 ]
 
 license = "MIT"
@@ -61,8 +68,8 @@ classifiers = [
 requires-python = ">=3.9,<4.0"
 
 [project.optional-dependencies]
-renderers = ["pyecharts==2.0.6"]
-docs = ["sphinx==6.0", "furo==2024.5.6"]
+renderers = ["pyecharts>=2.0.6"]
+docs = ["sphinx>=6.0", "furo>=2024.5.6"]
 
 [build-system]
 requires = ["hatchling"]
@@ -71,8 +78,8 @@ build-backend = "hatchling.build"
 [tool.rye]
 managed = true
 dev-dependencies = [
-    "pytest==8.0.0",
-    "pytest-mock==3.14.0",
+    "pytest>=8.0.0",
+    "pytest-mock>=3.14.0",
     "-e file:.[renderers]",
     "-e file:.[docs]",
     "pylint>=3.2.5",
