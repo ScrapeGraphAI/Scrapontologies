@@ -13,4 +13,4 @@ langchain_openai>=0.2.2
 langchain-anthropic>=0.2.3
 langchain-google-vertexai>=2.0.5
 langchain-google-genai>=2.0.1
-langchain-ollama>=0.3.3
+langchain-ollama>=0.2.0
