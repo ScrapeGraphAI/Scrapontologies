@@ -1,15 +1,14 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Any, Optional
+from typing import List, Dict, Any, Optional
 from .primitives import Entity, Relation
 from .parsers.base_parser import BaseParser
-from .parsers.prompts import DELETE_PROMPT, UPDATE_ENTITIES_PROMPT, UPDATE_SCHEMA_PROMPT, CREATE_TABLES_PROMPT
-from .llm_client import LLMClient
+from .parsers.prompts import DELETE_PROMPT, UPDATE_SCHEMA_PROMPT, CREATE_TABLES_PROMPT
 from .parsers.prompts import UPDATE_SCHEMA_PROMPT
 from .db_client import DBClient, PostgresDBClient
 import json
 from langgraph.graph import StateGraph, END, START
-from typing import TypedDict, Literal
+from typing import Literal
 from scrapontology.db_client import PostgresDBClient
 from pydantic import BaseModel
 logger = logging.getLogger(__name__)
