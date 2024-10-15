@@ -11,11 +11,13 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 # get current directory
 curr_dirr = os.path.dirname(os.path.abspath(__file__))
+# get path to example_files folder
+example_files_dir = os.path.join(curr_dirr, 'example_files')
 
 def main():
     # Path to the PDF file
     pdf_name = "test.pdf"
-    pdf_path = os.path.join(curr_dirr, pdf_name)
+    pdf_path = os.path.join(example_files_dir, pdf_name)
     
     # ************************************************
     # Define the configuration for the LLMClient here

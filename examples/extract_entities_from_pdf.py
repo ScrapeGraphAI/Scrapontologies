@@ -10,7 +10,7 @@ def main():
 
     # Get the path to the tests directory
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    tests_dir = os.path.join(script_dir, 'tests')  # Adjust the path as needed
+    tests_dir = os.path.join(script_dir, 'example_files')  # Adjust the path as needed
     
     # Get all files in the tests directory
     test_files = [os.path.join(tests_dir, f) for f in os.listdir(tests_dir) if os.path.isfile(os.path.join(tests_dir, f))]

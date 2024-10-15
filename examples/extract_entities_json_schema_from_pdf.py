@@ -10,8 +10,9 @@ def main():
 
     # get current directory
     curr_dirr = os.path.dirname(os.path.abspath(__file__))
+    example_files_dir = os.path.join(curr_dirr, 'example_files')
     pdf_name = "test.pdf"
-    pdf_path = os.path.join(curr_dirr, pdf_name)
+    pdf_path = os.path.join(example_files_dir, pdf_name)
 
     # ************************************************
     # Define the configuration for the LLMClient here
