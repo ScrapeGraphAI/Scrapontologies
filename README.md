@@ -10,6 +10,10 @@ The generate schemas can be used to infer from document to use for tables in a d
 - **Schema Generation**: Constructs a schema based and structure of the extracted entities.
 - **Visualization**: Dynamic schema visualization
 
+## News 📰
+
+- ScrapegraphAI has now his APIs! Check it out [here](https://scrapegraphai.com)!
+
 ## Quick Start
 
 ### Prerequisites
